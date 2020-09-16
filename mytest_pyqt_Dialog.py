@@ -13,7 +13,7 @@ class LogInDialog(QDialog):
     def setupUI(self):
         self.setGeometry(1100, 200, 300, 100)
         self.setWindowTitle("Sign In")
-        self.setWindowIcon(QIcon('icon.png'))
+        self.setWindowIcon(QIcon('icon.png')
 
         label1 = QLabel("ID: ")
         label2 = QLabel("Password: ")
