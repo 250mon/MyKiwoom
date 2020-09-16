@@ -2,6 +2,9 @@ import sys
 from PyQt5.QtWidgets import *
 from PyQt5.QAxContainer import *
 from PyQt5.QtCore import *
+import time
+
+TR_REQ_TIME_INTERVAL = 0.2
 
 
 class Kiwoom(QAxWidget):
@@ -47,8 +50,8 @@ class Kiwoom(QAxWidget):
         self.tr_event_loop = QEventLoop()
         self.tr_event_loop.exec_()
 
-    def comm_get_data(self, tr_code, real_type, field_name, index, item_name):
-        ret = self.dynamicCall("GetCommData(QString, QString, QString, int, QString", tr_code, real_type, field_name,
+    def _comm_get_data(self, tr_code, record_name, index, item_name):
+        ret = self.dynamicCall("GetCommData(QString, QString, QString, int, QString", tr_code, record_name,
                                index, item_name)
         return ret.strip()
 
@@ -74,12 +77,12 @@ class Kiwoom(QAxWidget):
         data_cnt = self._get_repeat_cnt(trcode, rqname)
 
         for i in range(data_cnt):
-            date = self._comm_get_data(trcode, "", rqname, i, "일자")
-            open = self._comm_get_data(trcode, "", rqname, i, "시가")
-            high = self._comm_get_data(trcode, "", rqname, i, "고가")
-            low = self._comm_get_data(trcode, "", rqname, i, "저가")
-            close = self._comm_get_data(trcode, "", rqname, i, "현재가")
-            volume = self._comm_get_data(trcode, "", rqname, i, "거래량")
+            date = self._comm_get_data(trcode, rqname, i, "일자")
+            open = self._comm_get_data(trcode, rqname, i, "시가")
+            high = self._comm_get_data(trcode, rqname, i, "고가")
+            low = self._comm_get_data(trcode, rqname, i, "저가")
+            close = self._comm_get_data(trcode, rqname, i, "현재가")
+            volume = self._comm_get_data(trcode, rqname, i, "거래량")
             print(date, open, high, low, close, volume)
 
 
@@ -87,7 +90,22 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     kiwoom = Kiwoom()
     kiwoom.comm_connect()
-    code_list = kiwoom.get_code_list_by_market('10')
-    for code in code_list:
-        code_name = kiwoom.get_master_code_name(code)
-        print(code_name, end=" ")
+
+    # Get code list
+    # code_list = kiwoom.get_code_list_by_market('10')
+    # for code in code_list:
+    #     code_name = kiwoom.get_master_code_name(code)
+    #     print(code_name, end=" ")
+
+    # Day candle chart; opt10081 tr request
+    kiwoom.set_input_value("종목코드", "039490")
+    kiwoom.set_input_value("기준일자", "20170224")
+    kiwoom.set_input_value("수정주가구분", 1)
+    kiwoom.comm_rq_data("opt10081_req", "opt10081", 0, "0101")
+
+    while kiwoom.remained_data == True:
+        time.sleep(TR_REQ_TIME_INTERVAL)
+        kiwoom.set_input_value("종목코드", "039490")
+        kiwoom.set_input_value("기준일자", "20170224")
+        kiwoom.set_input_value("수정주가구분", 1)
+        kiwoom.comm_rq_data("opt10081_req", "opt10081", 2, "0101")
