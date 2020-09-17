@@ -64,7 +64,7 @@ if __name__ == "__main__":
     k_interface.set_input_value("수정주가구분", 1)
     k_interface.comm_rq_data("opt10081_req", "opt10081", 0, "0101")
 
-    while kiwoom.remained_data == True:
+    while kiwoom.remained_data:
         time.sleep(TR_REQ_TIME_INTERVAL)
         k_interface.set_input_value("종목코드", "039490")
         k_interface.set_input_value("기준일자", "20170224")
