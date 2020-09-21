@@ -24,5 +24,5 @@ class Kiwoom(QAxWidget):
     def connect(self):
         self.connector.comm_connect()
 
-    def reg_transaction(self, trans):
-        self.tr_handler.update({trans.get_rqname(): trans})
+    def reg_transaction(self, transaction):
+        self.tr_handler.update({transaction.get_rqname(): transaction})

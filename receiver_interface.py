@@ -21,7 +21,7 @@ class ReceiverInterface():
         else:
             self.remained_data = False
 
-        self.kiwoom.tr_handler[rqname].handle()
+        self.kiwoom.tr_handler[rqname].handle_response()
 
         try:
             self.kiwoom.tr_event_loop.exit()
