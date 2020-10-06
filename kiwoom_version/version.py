@@ -1,7 +1,7 @@
 import os
 import os.path
 import subprocess
-from kiwoom_version.util import *
+from util import *
 import time
 
 CUR_PATH = os.getcwd()
@@ -57,6 +57,9 @@ if __name__ == "__main__":
     login_info = "C:/OpenAPI/system/Autologin.dat"
     if os.path.isfile(login_info):
         os.remove("C:/OpenAPI/system/Autologin.dat")
+
+    # To bypass UAC
+    os.environ.update({"__COMPAT_LAYER": "RUnAsInvoker"})
 
     # 버전처리
     proc = subprocess.Popen(f"{CUR_PATH}/login/KiwoomAPI.exe", shell=True)
