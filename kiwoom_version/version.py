@@ -7,17 +7,15 @@ import time
 CUR_PATH = os.getcwd()
 
 
-def manual_login(user_id, user_pw, user_cert):
+def manual_login(user_id, user_pw):
     print("수동 로그인 함수 호출")
     hwnd = find_window("Open API Login")
     edit_id = win32gui.GetDlgItem(hwnd, 0x3E8)
     edit_pass = win32gui.GetDlgItem(hwnd, 0x3E9)
-    edit_cert = win32gui.GetDlgItem(hwnd, 0x3EA)
     button = win32gui.GetDlgItem(hwnd, 0x1)
 
     enter_keys(edit_id, user_id)
     enter_keys(edit_pass, user_pw)
-    enter_keys(edit_cert, user_cert)
     click_button(button)
 
 
@@ -49,8 +47,6 @@ if __name__ == "__main__":
     lines = f.readlines()
     user_id = lines[0].strip()
     user_pw = lines[1].strip()
-    user_cert = lines[2].strip()
-    user_pw2 = lines[3].strip()
     f.close()
 
     # 자동 로그인 파일 삭제 
@@ -66,7 +62,7 @@ if __name__ == "__main__":
     wait_secs("버전처리", 10)
 
     # 수동 로그인 
-    manual_login(user_id, user_pw, user_cert)
+    manual_login(user_id, user_pw)
     wait_secs("로그인", 90)
 
     # 프로그램 종료
