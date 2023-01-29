@@ -6,6 +6,7 @@ from PyQt5.QtCore import *  # eventloop/스레드를 사용 할 수 있는 함�
 ################# 부가 기능 수행(일꾼) #####################################
 from kiwoom import Kiwoom  # 키움증권 함수/공용 방 (싱글턴)
 from Qthread_1 import Thread1  # 계좌평가잔고내역 가져오기
+from Qthread_2 import Thread2  # 계좌관리
 
 # =================== 프로그램 실행 프로그램 =========================#
 
@@ -22,11 +23,11 @@ class Login_Machnine(QMainWindow, QWidget, form_class):  # QMainWindow : PyQt5�
         self.setUI()  # UI 초기값 셋업 반드시 필요
 
         ### 초기 셋팅
-        self.label_01.setText(str("총매입금액"))
-        self.label_02.setText(str("총평가금액"))
-        self.label_03.setText(str("추정예탁자산"))
-        self.label_04.setText(str("총평가손익금액"))
-        self.label_05.setText(str("총수익률(%)"))
+        # self.label_01.setText(str("총매입금액"))
+        # self.label_02.setText(str("총평가금액"))
+        # self.label_03.setText(str("추정예탁자산"))
+        # self.label_04.setText(str("총평가손익금액"))
+        # self.label_05.setText(str("총수익률(%)"))
 
         #### 기타 함수
         self.login_event_loop = QEventLoop()  # 이때 QEventLoop()는 block 기능을 가지고 있다.
@@ -38,6 +39,12 @@ class Login_Machnine(QMainWindow, QWidget, form_class):  # QMainWindow : PyQt5�
 
         #####이벤트 생성 및 진행
         self.call_account.clicked.connect(self.c_acc)  # 계좌정보가져오기
+        self.acc_manage.clicked.connect(self.a_manage)
+
+        ################# 부가기능 1 : 종목선택하기 새로운 종목 추가 및 삭제
+        self.k.kiwoom.OnReceiveTrData.connect(self.trdata_slot)  # 키움서버 데이터 받는 곳
+        self.additem_btn.clicked.connect(self.add_search_item)  # 종목 추가
+        self.delitem_btn.clicked.connect(self.del_search_item)  # 종목 삭제
 
     def setUI(self):
         self.setupUi(self)  # UI 초기값 셋업
@@ -74,6 +81,52 @@ class Login_Machnine(QMainWindow, QWidget, form_class):  # QMainWindow : PyQt5�
         ##### 1번 일꾼 실행
         h1 = Thread1(self)
         h1.start()
+
+    def a_manage(self):
+        print("계좌 관리")
+        h2 = Thread2(self)
+        h2.start
+
+    def del_search_item(self):
+        x = self.buylast.selectedIndexes()  # 리스트로 선택된 행번호와 열번호가 x에 입력된다.
+        self.buylast.removeRow(x[0].row())
+
+    def add_search_item(self):  # 종목추가시 사용됨.
+        itemName = self.searchitem_te.toPlainText()
+        if itemName != "":
+            for code in self.k.All_Stock_Code.keys():  # 포트폴리오에 저장된 코드들을 실시간 등록
+                # 주식체결 정보 가져오기(틱 데이터) : 현재가, 전일대비, 등락률, 매도호가, 매수호가, 거래량, 누적거래량, 고가, 시가, 저가
+                if itemName == self.k.All_Stock_Code[code]['종목명']:
+                    self.new_code = code
+
+        column_head = ["종목코드", "종목명", "현재가", "신용비율"]
+        colCount = len(column_head)
+        row_count = self.buylast.rowCount()
+
+        self.buylast.setColumnCount(colCount)  # 행 갯수
+        self.buylast.setRowCount(row_count + 1)  # colum_haed가 한 행을 잡아 먹는다. 실제 입력 되는 값은 1행 부터이다.
+        self.buylast.setHorizontalHeaderLabels(column_head)  # 행의 이름 삽입
+
+        self.buylast.setItem(row_count, 0, QTableWidgetItem(str(self.new_code)))  # 실제 입력값은 1행부터이나 0부터 들어가야 된다.
+        self.buylast.setItem(row_count, 1, QTableWidgetItem(str(itemName)))
+
+        self.getItemInfo(self.new_code)
+
+    def getItemInfo(self, new_code):
+        self.k.kiwoom.dynamicCall("SetInputValue(QString, QString)", "종목코드", new_code)
+        self.k.kiwoom.dynamicCall("CommRqData(QString, QString, int, QString)", "주식기본정보요청", "opt10001", 0, "100")
+
+    def trdata_slot(self, sScrNo, sRQName, sTrCode, sRecordName, sPrevNext):
+        if sTrCode == "opt10001":
+            if sRQName == "주식기본정보요청":
+                currentPrice = abs(
+                    int(self.k.kiwoom.dynamicCall("GetCommData(QString, QString, int, QString)", sTrCode, sRQName, 0,
+                                                  "현재가")))
+                D_R = (self.k.kiwoom.dynamicCall("GetCommData(QString, QString, int, QString)", sTrCode, sRQName, 0,
+                                                 "신용비율")).strip()
+                row_count = self.buylast.rowCount()
+                self.buylast.setItem(row_count - 1, 2, QTableWidgetItem(str(currentPrice)))
+                self.buylast.setItem(row_count - 1, 3, QTableWidgetItem(str(D_R)))
 
 
 if __name__ == '__main__':  # import된 것들을 실행시키지 않고 __main__에서 실행하는 것만 실행 시킨다.
