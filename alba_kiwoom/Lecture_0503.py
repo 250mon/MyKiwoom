@@ -1,4 +1,5 @@
 import sys  # system specific parameters and functions : 파이썬 스크립트 관리
+import os
 from PyQt5.QtWidgets import *  # GUI의 그래픽적 요소를 제어       하단의 terminal 선택, activate py37_32,  pip install pyqt5,   전부다 y
 from PyQt5 import uic  # ui 파일을 가져오기위한 함수
 from PyQt5.QtCore import *  # eventloop/스레드를 사용 할 수 있는 함수 가져옴.
@@ -45,6 +46,12 @@ class Login_Machnine(QMainWindow, QWidget, form_class):  # QMainWindow : PyQt5�
         self.k.kiwoom.OnReceiveTrData.connect(self.trdata_slot)  # 키움서버 데이터 받는 곳
         self.additem_btn.clicked.connect(self.add_search_item)  # 종목 추가
         self.delitem_btn.clicked.connect(self.del_search_item)  # 종목 삭제
+
+        ################# 부가기능 2 : 데이터베이스화 하기, 저장, 삭제, 불러오기
+        self.Save_Stock.clicked.connect(self.save_to_db)  # 종목 저장
+        self.Del_Stock.clicked.connect(self.remove_db)  # 종목 삭제
+        self.Load_Stock.clicked.connect(self.load_from_db)  # 종목 불러오기
+        ####################
 
     def setUI(self):
         self.setupUi(self)  # UI 초기값 셋업
@@ -97,7 +104,7 @@ class Login_Machnine(QMainWindow, QWidget, form_class):  # QMainWindow : PyQt5�
             for code in self.k.All_Stock_Code.keys():  # 포트폴리오에 저장된 코드들을 실시간 등록
                 # 주식체결 정보 가져오기(틱 데이터) : 현재가, 전일대비, 등락률, 매도호가, 매수호가, 거래량, 누적거래량, 고가, 시가, 저가
                 if itemName == self.k.All_Stock_Code[code]['종목명']:
-                    self.new_code = code
+                    item_code = code
 
         column_head = ["종목코드", "종목명", "현재가", "신용비율"]
         colCount = len(column_head)
@@ -107,13 +114,13 @@ class Login_Machnine(QMainWindow, QWidget, form_class):  # QMainWindow : PyQt5�
         self.buylast.setRowCount(row_count + 1)  # colum_haed가 한 행을 잡아 먹는다. 실제 입력 되는 값은 1행 부터이다.
         self.buylast.setHorizontalHeaderLabels(column_head)  # 행의 이름 삽입
 
-        self.buylast.setItem(row_count, 0, QTableWidgetItem(str(self.new_code)))  # 실제 입력값은 1행부터이나 0부터 들어가야 된다.
+        self.buylast.setItem(row_count, 0, QTableWidgetItem(str(item_code)))  # 실제 입력값은 1행부터이나 0부터 들어가야 된다.
         self.buylast.setItem(row_count, 1, QTableWidgetItem(str(itemName)))
 
-        self.getItemInfo(self.new_code)
+        self.getItemInfo(item_code)
 
-    def getItemInfo(self, new_code):
-        self.k.kiwoom.dynamicCall("SetInputValue(QString, QString)", "종목코드", new_code)
+    def getItemInfo(self, item_code):
+        self.k.kiwoom.dynamicCall("SetInputValue(QString, QString)", "종목코드", item_code)
         self.k.kiwoom.dynamicCall("CommRqData(QString, QString, int, QString)", "주식기본정보요청", "opt10001", 0, "100")
 
     def trdata_slot(self, sScrNo, sRQName, sTrCode, sRecordName, sPrevNext):
@@ -127,6 +134,54 @@ class Login_Machnine(QMainWindow, QWidget, form_class):  # QMainWindow : PyQt5�
                 row_count = self.buylast.rowCount()
                 self.buylast.setItem(row_count - 1, 2, QTableWidgetItem(str(currentPrice)))
                 self.buylast.setItem(row_count - 1, 3, QTableWidgetItem(str(D_R)))
+
+    def load_from_db(self):
+
+        codes = []
+        if os.path.exists("Selected_code.txt"):
+            f = open("Selected_code.txt", "r", encoding="utf8")
+            lines = f.readlines()  # 여러 종목이 저장되어 있다면 모든 항목을 가져온다.
+
+            for line in lines:
+                if line != "":  # 만약에 line이 비어 있지 않다면
+                    ls = line.split("\t")  # \t(tap)로 구분을 지어 놓는다.
+                    t_code = ls[0]
+                    t_name = ls[1]
+                    curren_price = ls[2]
+                    dept = ls[3].strip()
+
+                    codes.append([t_code, t_name, curren_price, dept])
+
+            f.close()
+
+        column_head = ["종목코드", "종목명", "현재가", "신용비율"]
+        colCount = len(column_head)
+        rowCount = len(codes)
+
+        self.buylast.setColumnCount(colCount)  # 행 갯수
+        self.buylast.setRowCount(rowCount)  # 열 갯수 (종목 수)
+        self.buylast.setHorizontalHeaderLabels(column_head)  # 행의 이름 삽입
+        self.buylast.setSelectionMode(QAbstractItemView.SingleSelection)
+
+        for index in range(rowCount):
+            self.buylast.setItem(index, 0, QTableWidgetItem(str(codes[index][0])))
+            self.buylast.setItem(index, 1, QTableWidgetItem(str(codes[index][1])))
+            self.buylast.setItem(index, 2, QTableWidgetItem(str(codes[index][2])))
+            self.buylast.setItem(index, 3, QTableWidgetItem(str(codes[index][3])))
+
+    def save_to_db(self):
+        f = open("Selected_code.txt", "a+", encoding="utf8")  # "a" 달아 쓴다. "w" 덮어 쓴다. files라느 파이썬 페키지 볼더를 만든다.
+        for row in range(self.buylast.rowCount()):
+            code_n = self.buylast.item(row, 0).text()
+            name = self.buylast.item(row, 1).text().strip()
+            price = self.buylast.item(row, 2).text()
+            dept = self.buylast.item(row, 3).text()
+            f.write("%s\t%s\t%s\t%s\n" % (code_n, name, price, dept))  # t는 tap을 의미한다.
+        f.close()
+
+    def remove_db(self):
+        if os.path.exists("Selected_code.txt"):
+            os.remove("Selected_code.txt")
 
 
 if __name__ == '__main__':  # import된 것들을 실행시키지 않고 __main__에서 실행하는 것만 실행 시킨다.
