@@ -61,7 +61,7 @@ class Worker(QObject):
             return False
 
         logging.info('checking self.km.proxy ...')
-        if not self.km.proxy.is_alive():
+        if not self.km.rq_handler.is_alive():
             return False
 
         logging.info('checking connection ...')
@@ -92,7 +92,7 @@ class Worker(QObject):
         print(real_data)
         # if there is some data in the queue for analysis,
         if not self.in_q.empty():
-            # blocking queue
+############################################ blocking queue, get stuck
             data = self.in_q.get()
             logging.info(f'received data = {data}')
             result = self._process_data(data)

@@ -63,7 +63,7 @@ class MyWindow(QWidget):
 
     def disconn_btn_clicked(self):
         print("btn_clicked")
-        self.km.proxy.kill()
+        self.km.rq_handler.kill()
         del self.km
         self.km = None
         print("self.km deleted")

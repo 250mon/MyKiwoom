@@ -60,5 +60,6 @@ if __name__ == "__main__":
     #pprint.pprint(data)
 
     lines = read_enc("opt10081")
+    print(f'lines: {lines}')
     data = parse_dat("opt10081", lines)
     pprint.pprint(data)

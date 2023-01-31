@@ -131,7 +131,7 @@ class MyWindow(QMainWindow, QObject):
         # self.finish_worker.emit()
         logging.info("Main timer stops")
         self.timer1.stop()
-        self.km.proxy.kill()
+        self.km.rq_handler.kill()
         self.km = None
         self.conn_btn.setEnabled(True)
         self.disconn_btn.setEnabled(False)
@@ -172,7 +172,7 @@ class MyWindow(QMainWindow, QObject):
             lambda : logging.info("Timer stops")
         )
         self.worker.finished.connect(self.timer1.stop)
-        self.worker.finished.connect(self.km.proxy.kill)
+        self.worker.finished.connect(self.km.rq_handler.kill)
 
         self.worker.finished.connect(self.thread.quit)
         self.worker.finished.connect(self.worker.deleteLater)

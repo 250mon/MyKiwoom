@@ -227,7 +227,7 @@ def version(user_id, user_pw, user_cert=None):
 
 
 if __name__ == "__main__":
-    options = config_reader("../config")
+    options = config_reader("../../../../config")
     id = options['id']
     password = options['password']
     cert = options['cert']

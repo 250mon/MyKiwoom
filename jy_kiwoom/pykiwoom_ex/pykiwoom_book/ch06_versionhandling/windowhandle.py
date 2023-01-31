@@ -91,7 +91,7 @@ if __name__ == "__main__":
     edit_cert = win32gui.GetDlgItem(hwnd, 0x3EA)
     btn_login = win32gui.GetDlgItem(hwnd, 0x1)
 
-    options = config_reader("../config")
+    options = config_reader("../../../../config")
     id = options['id']
     password = options['password']
     cert = options['cert']
