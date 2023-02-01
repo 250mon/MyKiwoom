@@ -1,11 +1,11 @@
 import sys 
 from PyQt5.QtWidgets import *
-import pykiwoom
+from pykiwoom.kiwoom_q_manager import KwmQMgr
 
 class MyWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.km = pykiwoom.KiwoomManager()
+        self.kwm_q = KwmQMgr()
 
 
 if __name__ == "__main__":

@@ -1,8 +1,7 @@
-import pykiwoom
-
+from pykiwoom.kiwoom_q_manager import KwmQMgr
 
 if __name__ == "__main__":
-    km = pykiwoom.KiwoomManager()
+    kwm_q = KwmQMgr()
 
     tr_cmd = {
         'rqname': "opt10001",
@@ -15,8 +14,11 @@ if __name__ == "__main__":
         'output': ['종목코드', '종목명', 'PER', 'PBR']
     }
 
-    km.put_tr(tr_cmd)
-    data, remain = km.get_tr()
+    kwm_q.put_tr(tr_cmd)
+    data, remain = kwm_q.get_tr()
     print(data, remain)
+    print('req')
 
-
+    kwm_q.put_method(("GetConnectState",))
+    data = kwm_q.get_method()
+    print(f"GetConnectState: {data}")

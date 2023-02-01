@@ -3,11 +3,12 @@ from PyQt5.QtWidgets import *
 from PyQt5.QAxContainer import *
 import pythoncom
 import datetime
+from PyQt5.QtCore import QObject
 from pykiwoom import parser
 import pandas as pd
 
 
-class Kiwoom:
+class Kiwoom(QObject):
     def __init__(self,
                  login=False,
                  tr_dqueue=None,
@@ -15,6 +16,7 @@ class Kiwoom:
                  tr_cond_dqueue=None,
                  real_cond_dqueue=None,
                  chejan_dqueue=None):
+        super().__init__()
         # OCX instance
         self.ocx = QAxWidget("KHOPENAPI.KHOpenAPICtrl.1")
 
@@ -118,7 +120,7 @@ class Kiwoom:
         return df
 
     def OnReceiveTrData(self, screen, rqname, trcode, record, next):
-        #print(screen, rqname, trcode, record, next)
+        print(f'OnReceive {screen}, {rqname}, {trcode}, {record}, {next}')
         # order
         # - KOA_NORMAL_BUY_KP_ORD  : 코스피 매수
         # - KOA_NORMAL_SELL_KP_ORD : 코스피 매도
@@ -136,6 +138,7 @@ class Kiwoom:
                 return None
             items = self.tr_output[trcode]
             data = self.get_data(trcode, rqname, items)
+            print(data)
 
             remain = 1 if next == '2' else 0
             self.tr_dqueue.put((data, remain))

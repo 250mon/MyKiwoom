@@ -1,12 +1,12 @@
 import sys
 from PyQt5.QtWidgets import QApplication
-from PyQt5.QtCore import QThread, QTimer, pyqtSignal, pyqtSlot
+from PyQt5.QtCore import QThread, QEventLoop, QTimer, pyqtSignal, pyqtSlot
 import pythoncom
 from pykiwoom.kiwoom import Kiwoom
 
 
-class KwRqHandler(QThread):
-    QApplication(sys.argv)
+class KwmRqHandler(QThread):
+    # app = QApplication(sys.argv)
     run_trigger = pyqtSignal()
 
     def __init__(self,
@@ -16,7 +16,11 @@ class KwRqHandler(QThread):
                  real_cqueue, real_dqueues,
                  cond_cqueue, cond_dqueue,
                  tr_cond_dqueue, real_cond_dqueue,
-                 chejan_dqueue):
+                 chejan_dqueue,
+                 parent=None):
+        # super().__init__(self, parent=parent)
+        super().__init__()
+
         # method queue
         self.method_cqueue  = method_cqueue
         self.method_dqueue  = method_dqueue
@@ -56,8 +60,8 @@ class KwRqHandler(QThread):
         # condition load
         self.kiwoom.GetConditionLoad()
 
-        # subprocess run
-        # self.run()
+        # When req arrives in the c_q of q_mgr, q_mgr emits a signal
+        # The signal triggered run() to run
         self.run_trigger.connect(self.run)
 
     @pyqtSlot()
@@ -159,5 +163,6 @@ class KwRqHandler(QThread):
                 elif func_name == "SendConditionStop":
                     self.kiwoom.SendConditionStop(screen, cond_name, index)
 
+        self.exec()
         # pythoncom.PumpWaitingMessages()
 

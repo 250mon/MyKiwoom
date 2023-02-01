@@ -38,7 +38,7 @@ class Login_Machnine(QMainWindow, QWidget, form_class):  # QMainWindow : PyQt5�
         self.set_signal_slot()  # 키움로그인을 위한 명령어 전송 시 받는 공간을 미리 생성한다.
         self.signal_login_commConnect()
 
-        #####이벤트 생성 및 진행
+        #####symotion-prefix)이벤트 생성 및 진행
         self.call_account.clicked.connect(self.c_acc)  # 계좌정보가져오기
         self.acc_manage.clicked.connect(self.a_manage)
 
