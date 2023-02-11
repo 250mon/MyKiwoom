@@ -1,5 +1,5 @@
 # opt10002: 주식 거래원 요청
-from pykiwoom.kiwoom import *
+from kwm_method_api import *
 
 kiwoom = Kiwoom()
 kiwoom.CommConnect(block=True)

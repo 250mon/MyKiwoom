@@ -1,7 +1,5 @@
-import sys
-from PyQt5.QtWidgets import *
 from PyQt5.QAxContainer import *
-from pykiwoom.kiwoom import *
+from kwm_method_api import *
 
 
 class MyWindow(QMainWindow):

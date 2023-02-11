@@ -1,8 +1,5 @@
-import sys
-from PyQt5.QtWidgets import QApplication
-from PyQt5.QtCore import QThread, QEventLoop, QTimer, pyqtSignal, pyqtSlot
-import pythoncom
-from pykiwoom.kiwoom import Kiwoom
+from PyQt5.QtCore import QThread, QEventLoop, pyqtSignal, pyqtSlot
+from kwm_method_api import Kiwoom
 
 
 class KwmRqHandler(QThread):
@@ -10,48 +7,57 @@ class KwmRqHandler(QThread):
     run_trigger = pyqtSignal()
 
     def __init__(self,
-                 method_cqueue, method_dqueue,
-                 tr_cqueue, tr_dqueue,
+                 method_cqueue,
+                 method_dqueue,
+                 tr_cqueue,
+                 tr_dqueue,
                  order_cqueue,
-                 real_cqueue, real_dqueues,
-                 cond_cqueue, cond_dqueue,
-                 tr_cond_dqueue, real_cond_dqueue,
+                 real_cqueue,
+                 real_dqueue,
+                 cond_cqueue,
+                 cond_dqueue,
+                 tr_cond_dqueue,
+                 real_cond_dqueue,
                  chejan_dqueue,
                  parent=None):
         # super().__init__(self, parent=parent)
         super().__init__()
 
         # method queue
-        self.method_cqueue  = method_cqueue
-        self.method_dqueue  = method_dqueue
+        self.method_cqueue = method_cqueue
+        self.method_dqueue = method_dqueue
 
         # tr queue
-        self.tr_cqueue      = tr_cqueue
-        self.tr_dqueue      = tr_dqueue
+        self.tr_cqueue = tr_cqueue
+        self.tr_dqueue = tr_dqueue
 
         # order queue
-        self.order_cqueue   = order_cqueue
+        self.order_cqueue = order_cqueue
 
         # real queue
-        self.real_cqueue    = real_cqueue
-        self.real_dqueues   = real_dqueues
+        self.real_cqueue = real_cqueue
+        self.real_dqueue = real_dqueue
 
         # condition queue
-        self.cond_cqueue      = cond_cqueue         # tr/real condition command queue
-        self.cond_dqueue      = cond_dqueue         # condition name list queue
-        self.tr_cond_dqueue   = tr_cond_dqueue      # tr condition data queue
-        self.real_cond_dqueue = real_cond_dqueue    # real condition data queue
+        self.cond_cqueue = cond_cqueue  # tr/real condition command queue
+        self.cond_dqueue = cond_dqueue  # condition name list queue
+        self.tr_cond_dqueue = tr_cond_dqueue  # tr condition data queue
+        self.real_cond_dqueue = real_cond_dqueue  # real condition data queue
 
         # chejan
-        self.chejan_dqueue    = chejan_dqueue
+        self.chejan_dqueue = chejan_dqueue
+
+        # Event loop
+        self.tr_event_loop = QEventLoop()
 
         # kiwoom instance
         self.kiwoom = Kiwoom(
-            tr_dqueue           = self.tr_dqueue,
-            real_dqueues        = self.real_dqueues,
-            tr_cond_dqueue      = self.tr_cond_dqueue,
-            real_cond_dqueue    = self.real_cond_dqueue,
-            chejan_dqueue       = self.chejan_dqueue
+            tr_dqueue=self.tr_dqueue,
+            real_dqueue=self.real_dqueue,
+            tr_cond_dqueue=self.tr_cond_dqueue,
+            real_cond_dqueue=self.real_cond_dqueue,
+            chejan_dqueue=self.chejan_dqueue,
+            tr_event_loop = self.tr_event_loop
         )
 
         # kiwoom login
@@ -68,8 +74,9 @@ class KwmRqHandler(QThread):
     def run(self):
         # method
         if not self.method_cqueue.empty():
+            print('Method command going out ...')
             func_name, *params = self.method_cqueue.get()
-            print(f'req_handler.run(): {func_name}')
+            print(f'Method command: req_handler.run(): {func_name}')
             if hasattr(self.kiwoom, func_name):
                 func = getattr(self.kiwoom, func_name)
                 if params is not None:
@@ -80,6 +87,7 @@ class KwmRqHandler(QThread):
 
         # tr
         if not self.tr_cqueue.empty():
+            print('Tr command going out ...')
             tr_cmd = self.tr_cqueue.get()
 
             # parameters
@@ -87,7 +95,7 @@ class KwmRqHandler(QThread):
             rqname = tr_cmd.get('rqname', trcode)
             next = tr_cmd.get('next', 0)
             screen = tr_cmd['screen']
-            input  = tr_cmd['input']
+            input = tr_cmd['input']
             output = tr_cmd['output']
 
             for id, value in input.items():
@@ -95,36 +103,39 @@ class KwmRqHandler(QThread):
 
             self.kiwoom.tr_output[trcode] = output
             self.kiwoom.CommRqData(rqname, trcode, next, screen)
+            # self.tr_event_loop.exec_()
 
         # order
         if not self.order_cqueue.empty():
+            print('Order command going out ...')
             order_cmd = self.order_cqueue.get()
             # parameters
-            rqname      = order_cmd['rqname']
-            screen      = order_cmd['screen']
-            acc_no      = order_cmd['acc_no']
-            order_type  = order_cmd['order_type']
-            code        = order_cmd['code']
-            quantity    = order_cmd['quantity']
-            price       = order_cmd['price']
-            hoga_gb     = order_cmd['hoga_gb']
-            order_no    = order_cmd['order_no']
+            rqname = order_cmd['rqname']
+            screen = order_cmd['screen']
+            acc_no = order_cmd['acc_no']
+            order_type = order_cmd['order_type']
+            code = order_cmd['code']
+            quantity = order_cmd['quantity']
+            price = order_cmd['price']
+            hoga_gb = order_cmd['hoga_gb']
+            order_no = order_cmd['order_no']
 
             # request api
             self.kiwoom.SendOrder(rqname, screen, acc_no, order_type, code, quantity, price, hoga_gb, order_no)
 
         # real
         if not self.real_cqueue.empty():
-            real_cmd  = self.real_cqueue.get()
+            print('Real command going out ...')
+            real_cmd = self.real_cqueue.get()
 
             # parameters
-            func_name = real_cmd['func_name']   # SetRealReg/DisConnectRealData
-            screen    = real_cmd.get('screen', "7999")
+            func_name = real_cmd['func_name']  # SetRealReg/DisConnectRealData
+            screen = real_cmd.get('screen', "7999")
 
             if func_name == "SetRealReg":
-                code_list = real_cmd['code_list']   # ["005930", "000660"]
-                fid_list  = real_cmd['fid_list']    # ["215", "20", "214"]
-                opt_type  = real_cmd['opt_type']
+                code_list = real_cmd['code_list']  # ["005930", "000660"]
+                fid_list = real_cmd['fid_list']  # ["215", "20", "214"]
+                opt_type = real_cmd['opt_type']
 
                 # register fid
                 for ticker in code_list:
@@ -135,7 +146,7 @@ class KwmRqHandler(QThread):
                             list(set(self.kiwoom.real_fid[ticker] + fid_list))
 
                 self.kiwoom.SetRealReg(screen, ";".join(code_list),
-                    ";".join(fid_list), str(opt_type))
+                                       ";".join(fid_list), str(opt_type))
             elif func_name == "DisConnectRealData":
                 self.kiwoom.DisconnectRealData(screen)
 
@@ -147,15 +158,16 @@ class KwmRqHandler(QThread):
         #   'search': 0/1/2
         # }
         if not self.cond_cqueue.empty():
-            cond_cmd  = self.cond_cqueue.get()
-            func_name = cond_cmd['func_name']   # SendCondition/SendConditionStop
+            print('Cond command going out ...')
+            cond_cmd = self.cond_cqueue.get()
+            func_name = cond_cmd['func_name']  # SendCondition/SendConditionStop
             if func_name == "GetConditionNameList":
                 cond_list = self.kiwoom.GetConditionNameList()
                 self.cond_dqueue.put(cond_list)
             else:
-            # parameters
+                # parameters
                 cond_name = cond_cmd['cond_name']
-                index     = cond_cmd['index']
+                index = cond_cmd['index']
                 if func_name == "SendCondition":
                     screen = cond_cmd['screen']
                     search = cond_cmd['search']
@@ -165,4 +177,3 @@ class KwmRqHandler(QThread):
 
         self.exec()
         # pythoncom.PumpWaitingMessages()
-

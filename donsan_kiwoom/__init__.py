@@ -1,7 +1,7 @@
 import sys
 # sys.path.append("./")
 
-from kiwoom.kiwoom import *
+from kwm_method_api.kiwoom import *
 from PyQt5.QtWidgets import *
 
 class Main():

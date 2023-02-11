@@ -1,8 +1,6 @@
-import os
 import os.path
 import subprocess
-from util import *
-import time
+from kiwoom_version.util import *
 
 CUR_PATH = os.getcwd()
 

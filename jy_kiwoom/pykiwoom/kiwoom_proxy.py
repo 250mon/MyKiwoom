@@ -42,7 +42,7 @@ class KiwoomProxy:
         # kiwoom instance
         self.kiwoom = Kiwoom(
             tr_dqueue           = self.tr_dqueue,
-            real_dqueues        = self.real_dqueues,
+            real_dqueue= self.real_dqueues,
             tr_cond_dqueue      = self.tr_cond_dqueue,
             real_cond_dqueue    = self.real_cond_dqueue,
             chejan_dqueue       = self.chejan_dqueue

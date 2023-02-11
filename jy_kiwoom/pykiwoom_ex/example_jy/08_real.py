@@ -1,8 +1,15 @@
-import pykiwoom
+from pykiwoom.kiwoom_q_manager import KwmQMgr
 
 
 if __name__ == "__main__":
-    km = pykiwoom.KiwoomManager()
+    kwm_q = KwmQMgr()
+
+    real_cmd = {
+        'func_name': "DisconnectRealData",
+        'screen': '2000'
+    }
+    kwm_q.put_real(real_cmd)
+    exit(0)
 
     # real_cmd = {
     #     'func_name': "SetRealReg",
@@ -20,9 +27,9 @@ if __name__ == "__main__":
         "opt_type": 0
     }
 
-    km.put_real(real_cmd)
+    kwm_q.put_real(real_cmd)
     while True:
-        data = km.get_real()
+        data = kwm_q.get_real()
         print(data)
 
 

@@ -33,7 +33,7 @@ class KwmQMgr:
 
         # real queue
         self.real_cqueue = Queue()
-        self.real_dqueues = Queue()
+        self.real_dqueue = Queue()
 
         # condition queue
         self.cond_cqueue = Queue()
@@ -55,7 +55,7 @@ class KwmQMgr:
             self.order_cqueue,
             # real queue
             self.real_cqueue,
-            self.real_dqueues,
+            self.real_dqueue,
             # condition queue
             self.cond_cqueue,
             self.cond_dqueue,
@@ -98,7 +98,7 @@ class KwmQMgr:
         self.real_cqueue.put(cmd)
 
     def get_real(self):
-        return self.real_dqueues.get()
+        return self.real_dqueue.get()
 
     # condition
     @command_q

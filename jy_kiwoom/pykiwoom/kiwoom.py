@@ -12,28 +12,31 @@ class Kiwoom(QObject):
     def __init__(self,
                  login=False,
                  tr_dqueue=None,
-                 real_dqueues=None,
+                 real_dqueue=None,
                  tr_cond_dqueue=None,
                  real_cond_dqueue=None,
-                 chejan_dqueue=None):
+                 chejan_dqueue=None,
+                 tr_event_loop=None):
         super().__init__()
         # OCX instance
         self.ocx = QAxWidget("KHOPENAPI.KHOpenAPICtrl.1")
 
         # queues
-        self.tr_dqueue          = tr_dqueue          # tr data queue
-        self.real_dqueues       = real_dqueues       # real data queue list
-        self.tr_cond_dqueue     = tr_cond_dqueue
-        self.real_cond_dqueue   = real_cond_dqueue
-        self.chejan_dqueue      = chejan_dqueue
+        self.tr_dqueue = tr_dqueue  # tr data queue
+        self.real_dqueue = real_dqueue  # real data queue list
+        self.tr_cond_dqueue = tr_cond_dqueue
+        self.real_cond_dqueue = real_cond_dqueue
+        self.chejan_dqueue = chejan_dqueue
 
-        self.connected          = False              # for login event
-        self.received           = False              # for tr event
-        self.tr_items           = None               # tr input/output items
-        self.tr_data            = None               # tr output data
-        self.tr_record          = None
-        self.tr_remained        = False
-        self.condition_loaded   = False
+        self.tr_event_loop = tr_event_loop
+
+        self.connected = False  # for login event
+        self.received = False  # for tr event
+        self.tr_items = None  # tr input/output items
+        self.tr_data = None  # tr output data
+        self.tr_record = None
+        self.tr_remained = False
+        self.condition_loaded = False
 
         self._set_signals_slots()
 
@@ -43,9 +46,9 @@ class Kiwoom(QObject):
         if login:
             self.CommConnect()
 
-    #-------------------------------------------------------------------------------------------------------------------
+    # -------------------------------------------------------------------------------------------------------------------
     # callback functions
-    #-------------------------------------------------------------------------------------------------------------------
+    # -------------------------------------------------------------------------------------------------------------------
     def OnEventConnect(self, err_code):
         """Login Event
 
@@ -89,7 +92,7 @@ class Kiwoom(QObject):
         # legacy interface
         codes = code_list.split(';')[:-1]
         self.tr_condition_data = codes
-        self.tr_condition_loaded= True
+        self.tr_condition_loaded = True
 
         # queue
         if self.tr_cond_dqueue is not None:
@@ -120,7 +123,7 @@ class Kiwoom(QObject):
         return df
 
     def OnReceiveTrData(self, screen, rqname, trcode, record, next):
-        print(f'OnReceive {screen}, {rqname}, {trcode}, {record}, {next}')
+        print(f'OnReceiveTrData {screen}, {rqname}, {trcode}, {record}, {next}')
         # order
         # - KOA_NORMAL_BUY_KP_ORD  : 코스피 매수
         # - KOA_NORMAL_SELL_KP_ORD : 코스피 매도
@@ -132,18 +135,18 @@ class Kiwoom(QObject):
         # - KOA_NORMAL_KQ_MODIFY   : 코스피 주문 변경
         if self.tr_dqueue is not None:
             if trcode in ('KOA_NORMAL_BUY_KP_ORD', 'KOA_NORMAL_SELL_KP_ORD',
-                'KOA_NORMAL_KP_CANCEL', 'KOA_NORMAL_KP_MODIFY',
-                'KOA_NORMAL_BUY_KQ_ORD', 'KOA_NORMAL_SELL_KQ_ORD',
-                'KOA_NORMAL_KQ_CANCEL', 'KOA_NORMAL_KQ_MODIFY'):
+                          'KOA_NORMAL_KP_CANCEL', 'KOA_NORMAL_KP_MODIFY',
+                          'KOA_NORMAL_BUY_KQ_ORD', 'KOA_NORMAL_SELL_KQ_ORD',
+                          'KOA_NORMAL_KQ_CANCEL', 'KOA_NORMAL_KQ_MODIFY'):
                 return None
             items = self.tr_output[trcode]
             data = self.get_data(trcode, rqname, items)
-            print(data)
+            print(f'tr_dqueue is not None {data}')
 
             remain = 1 if next == '2' else 0
             self.tr_dqueue.put((data, remain))
         else:
-            print(self.tr_items)
+            print(f'tr_dqueue is none {self.tr_items}')
             try:
                 record = None
                 items = None
@@ -195,11 +198,13 @@ class Kiwoom(QObject):
             output = {'gubun': gubun}
             for fid in fid_list.split(';'):
                 data = self.GetChejanData(fid)
-                output[fid]=data
+                output[fid] = data
 
             self.chejan_dqueue.put(output)
 
     def OnReceiveRealData(self, code, rtype, data):
+        print(f'OnReceiveRealData {code}')
+        return
         """실시간 데이터를 받는 시점에 콜백되는 메소드입니다.
 
         Args:
@@ -214,7 +219,7 @@ class Kiwoom(QObject):
             real_data[fid] = val
 
         # put real data to the queue
-        self.real_dqueues.put(real_data)
+        self.real_dqueue.put(real_data)
 
     def _set_signals_slots(self):
         self.ocx.OnReceiveTrData.connect(self.OnReceiveTrData)
@@ -226,9 +231,9 @@ class Kiwoom(QObject):
         self.ocx.OnReceiveTrCondition.connect(self.OnReceiveTrCondition)
         self.ocx.OnReceiveConditionVer.connect(self.OnReceiveConditionVer)
 
-    #-------------------------------------------------------------------------------------------------------------------
+    # -------------------------------------------------------------------------------------------------------------------
     # OpenAPI+ 메서드
-    #-------------------------------------------------------------------------------------------------------------------
+    # -------------------------------------------------------------------------------------------------------------------
     def CommConnect(self, block=True):
         """
         로그인 윈도우를 실행합니다.
@@ -325,7 +330,8 @@ class Kiwoom(QObject):
         :param screen: 화면번호
         :return:
         """
-        ret = self.ocx.dynamicCall("CommKwRqData(QString, bool, int, int, QString, QString)", arr_code, next, code_count, type, rqname, screen);
+        ret = self.ocx.dynamicCall("CommKwRqData(QString, bool, int, int, QString, QString)", arr_code, next,
+                                   code_count, type, rqname, screen);
         return ret
 
     def GetAPIModulePath(self):
@@ -441,7 +447,7 @@ class Kiwoom(QObject):
         data = self.ocx.dynamicCall("GetThemeGroupList(int)", type)
         tokens = data.split(';')
         if type == 0:
-            grp = {x.split('|')[0]:x.split('|')[1] for x in tokens}
+            grp = {x.split('|')[0]: x.split('|')[1] for x in tokens}
         else:
             grp = {x.split('|')[1]: x.split('|')[0] for x in tokens}
         return grp
@@ -479,7 +485,8 @@ class Kiwoom(QObject):
         return self.tr_data
 
     def SetRealReg(self, screen, code_list, fid_list, opt_type):
-        ret = self.ocx.dynamicCall("SetRealReg(QString, QString, QString, QString)", screen, code_list, fid_list, opt_type)
+        ret = self.ocx.dynamicCall("SetRealReg(QString, QString, QString, QString)", screen, code_list, fid_list,
+                                   opt_type)
         return ret
 
     def SetRealRemove(self, screen, del_code):
@@ -531,7 +538,6 @@ class Kiwoom(QObject):
         if block is True:
             return self.tr_condition_data
 
-
     def SendConditionStop(self, screen, cond_name, index):
         self.ocx.dynamicCall("SendConditionStop(QString, QString, int)", screen, cond_name, index)
 
@@ -540,25 +546,23 @@ class Kiwoom(QObject):
         return data
 
 
-
 if not QApplication.instance():
     app = QApplication(sys.argv)
-
 
 if __name__ == "__main__":
     pass
     ## 로그인
-    #kiwoom = Kiwoom()
-    #kiwoom.CommConnect(block=True)
+    # kiwoom = Kiwoom()
+    # kiwoom.CommConnect(block=True)
 
     ## 조건식 load
-    #kiwoom.GetConditionLoad()
+    # kiwoom.GetConditionLoad()
 
-    #conditions = kiwoom.GetConditionNameList()
+    # conditions = kiwoom.GetConditionNameList()
 
     ## 0번 조건식에 해당하는 종목 리스트 출력
-    #condition_index = conditions[0][0]
-    #condition_name = conditions[0][1]
-    #codes = kiwoom.SendCondition("0101", condition_name, condition_index, 0)
+    # condition_index = conditions[0][0]
+    # condition_name = conditions[0][1]
+    # codes = kiwoom.SendCondition("0101", condition_name, condition_index, 0)
 
-    #print(codes)
+    # print(codes)

@@ -1,5 +1,5 @@
 # TR/opw00004
-from pykiwoom.kiwoom import *
+from kwm_method_api import *
 
 # 로그인
 kiwoom = Kiwoom()

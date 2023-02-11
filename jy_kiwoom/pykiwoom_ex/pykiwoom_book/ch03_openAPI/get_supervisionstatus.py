@@ -1,4 +1,4 @@
-from pykiwoom.kiwoom import *
+from kwm_method_api import *
 
 kiwoom = Kiwoom()
 kiwoom.CommConnect(block=True)

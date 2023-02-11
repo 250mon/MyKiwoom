@@ -2,7 +2,7 @@ import sys
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QAxContainer import *
-from util import *
+from kiwoom_version.util import *
 from PyQt5 import QtTest
 import os 
 

@@ -1,5 +1,4 @@
-import sys
-from pykiwoom.kiwoom import *
+from kwm_method_api import *
 from PyQt5.QtWidgets import *
 
 class MyWindow(QMainWindow):

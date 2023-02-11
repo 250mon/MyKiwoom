@@ -76,11 +76,11 @@ class Kiwoom(QAxWidget):
         QTest.qWait(5000)
 
         #실시간 수신 관련 함수
-        self.dynamicCall("SetRealReg(QString, QString, QString, QString)", self.screen_start_stop_real, '', self.realType.REALTYPE['장시작시간']['장운영구분'], "0")
+        self.dynamicCall("SetRealReg(QString, QString, QString, QString)", self.screen_start_stop_real, '', self.realType.FID['장시작시간']['장운영구분'], "0")
 
         for code in self.portfolio_stock_dict.keys():
             screen_num = self.portfolio_stock_dict[code]['스크린번호']
-            fids = self.realType.REALTYPE['주식체결']['체결시간']
+            fids = self.realType.FID['주식체결']['체결시간']
             self.dynamicCall("SetRealReg(QString, QString, QString, QString)", screen_num, code, fids, "1")
 
         self.myMsg.send_msg(msg="주식 자동화 프로그램 동작")
@@ -471,7 +471,7 @@ class Kiwoom(QAxWidget):
 
     def realdata_slot(self, sCode, sRealType, sRealData):
         if sRealType == "장시작시간":
-            fid = self.realType.REALTYPE[sRealType]['장운영구분'] # (0:장시작전, 2:장종료전(20분), 3:장시작, 4,8:장종료(30분), 9:장마감)
+            fid = self.realType.FID[sRealType]['장운영구분'] # (0:장시작전, 2:장종료전(20분), 3:장시작, 4,8:장종료(30분), 9:장마감)
             value = self.dynamicCall("GetCommRealData(QString, int)", sCode, fid)
 
             if value == '0':
@@ -497,35 +497,35 @@ class Kiwoom(QAxWidget):
                 sys.exit()
 
         elif sRealType == "주식체결":
-            a = self.dynamicCall("GetCommRealData(QString, int)", sCode, self.realType.REALTYPE[sRealType]['체결시간']) # 출력 HHMMSS
-            b = self.dynamicCall("GetCommRealData(QString, int)", sCode, self.realType.REALTYPE[sRealType]['현재가']) # 출력 : +(-)2520
+            a = self.dynamicCall("GetCommRealData(QString, int)", sCode, self.realType.FID[sRealType]['체결시간']) # 출력 HHMMSS
+            b = self.dynamicCall("GetCommRealData(QString, int)", sCode, self.realType.FID[sRealType]['현재가']) # 출력 : +(-)2520
             b = abs(int(b))
 
-            c = self.dynamicCall("GetCommRealData(QString, int)", sCode, self.realType.REALTYPE[sRealType]['전일대비']) # 출력 : +(-)2520
+            c = self.dynamicCall("GetCommRealData(QString, int)", sCode, self.realType.FID[sRealType]['전일대비']) # 출력 : +(-)2520
             c = abs(int(c))
 
-            d = self.dynamicCall("GetCommRealData(QString, int)", sCode, self.realType.REALTYPE[sRealType]['등락율']) # 출력 : +(-)12.98
+            d = self.dynamicCall("GetCommRealData(QString, int)", sCode, self.realType.FID[sRealType]['등락율']) # 출력 : +(-)12.98
             d = float(d)
 
-            e = self.dynamicCall("GetCommRealData(QString, int)", sCode, self.realType.REALTYPE[sRealType]['(최우선)매도호가']) # 출력 : +(-)2520
+            e = self.dynamicCall("GetCommRealData(QString, int)", sCode, self.realType.FID[sRealType]['(최우선)매도호가']) # 출력 : +(-)2520
             e = abs(int(e))
 
-            f = self.dynamicCall("GetCommRealData(QString, int)", sCode, self.realType.REALTYPE[sRealType]['(최우선)매수호가']) # 출력 : +(-)2515
+            f = self.dynamicCall("GetCommRealData(QString, int)", sCode, self.realType.FID[sRealType]['(최우선)매수호가']) # 출력 : +(-)2515
             f = abs(int(f))
 
-            g = self.dynamicCall("GetCommRealData(QString, int)", sCode, self.realType.REALTYPE[sRealType]['거래량']) # 출력 : +240124 매수일때, -2034 매도일 때
+            g = self.dynamicCall("GetCommRealData(QString, int)", sCode, self.realType.FID[sRealType]['거래량']) # 출력 : +240124 매수일때, -2034 매도일 때
             g = abs(int(g))
 
-            h = self.dynamicCall("GetCommRealData(QString, int)", sCode, self.realType.REALTYPE[sRealType]['누적거래량']) # 출력 : 240124
+            h = self.dynamicCall("GetCommRealData(QString, int)", sCode, self.realType.FID[sRealType]['누적거래량']) # 출력 : 240124
             h = abs(int(h))
 
-            i = self.dynamicCall("GetCommRealData(QString, int)", sCode, self.realType.REALTYPE[sRealType]['고가']) # 출력 : +(-)2530
+            i = self.dynamicCall("GetCommRealData(QString, int)", sCode, self.realType.FID[sRealType]['고가']) # 출력 : +(-)2530
             i = abs(int(i))
 
-            j = self.dynamicCall("GetCommRealData(QString, int)", sCode, self.realType.REALTYPE[sRealType]['시가']) # 출력 : +(-)2530
+            j = self.dynamicCall("GetCommRealData(QString, int)", sCode, self.realType.FID[sRealType]['시가']) # 출력 : +(-)2530
             j = abs(int(j))
 
-            k = self.dynamicCall("GetCommRealData(QString, int)", sCode, self.realType.REALTYPE[sRealType]['저가']) # 출력 : +(-)2530
+            k = self.dynamicCall("GetCommRealData(QString, int)", sCode, self.realType.FID[sRealType]['저가']) # 출력 : +(-)2530
             k = abs(int(k))
 
             self.portfolio_stock_dict[sCode].update({"체결시간": a})
@@ -610,48 +610,48 @@ class Kiwoom(QAxWidget):
 
     def chejan_slot(self, sGubun, nItemCnt, sFidList):
         if int(sGubun) == 0: #주문체결
-            account_num = self.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['주문체결']['계좌번호'])
-            sCode = self.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['주문체결']['종목코드'])[1:]
-            stock_name = self.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['주문체결']['종목명'])
+            account_num = self.dynamicCall("GetChejanData(int)", self.realType.FID['주문체결']['계좌번호'])
+            sCode = self.dynamicCall("GetChejanData(int)", self.realType.FID['주문체결']['종목코드'])[1:]
+            stock_name = self.dynamicCall("GetChejanData(int)", self.realType.FID['주문체결']['종목명'])
             stock_name = stock_name.strip()
 
-            origin_order_number = self.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['주문체결']['원주문번호']) # 출력 : defaluse : "000000"
-            order_number = self.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['주문체결']['주문번호']) # 출럭: 0115061 마지막 주문번호
+            origin_order_number = self.dynamicCall("GetChejanData(int)", self.realType.FID['주문체결']['원주문번호']) # 출력 : defaluse : "000000"
+            order_number = self.dynamicCall("GetChejanData(int)", self.realType.FID['주문체결']['주문번호']) # 출럭: 0115061 마지막 주문번호
 
-            order_status = self.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['주문체결']['주문상태']) # 출력: 접수, 확인, 체결
-            order_quan = self.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['주문체결']['주문수량']) # 출력 : 3
+            order_status = self.dynamicCall("GetChejanData(int)", self.realType.FID['주문체결']['주문상태']) # 출력: 접수, 확인, 체결
+            order_quan = self.dynamicCall("GetChejanData(int)", self.realType.FID['주문체결']['주문수량']) # 출력 : 3
             order_quan = int(order_quan)
 
-            order_price = self.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['주문체결']['주문가격']) # 출력: 21000
+            order_price = self.dynamicCall("GetChejanData(int)", self.realType.FID['주문체결']['주문가격']) # 출력: 21000
             order_price = int(order_price)
 
-            not_chegual_quan = self.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['주문체결']['미체결수량']) # 출력: 15, default: 0
+            not_chegual_quan = self.dynamicCall("GetChejanData(int)", self.realType.FID['주문체결']['미체결수량']) # 출력: 15, default: 0
             not_chegual_quan = int(not_chegual_quan)
 
-            order_gubun = self.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['주문체결']['주문구분']) # 출력: -매도, +매수
+            order_gubun = self.dynamicCall("GetChejanData(int)", self.realType.FID['주문체결']['주문구분']) # 출력: -매도, +매수
             order_gubun = order_gubun.strip().lstrip('+').lstrip('-')
 
-            chegual_time_str = self.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['주문체결']['주문/체결시간']) # 출력: '151028'
+            chegual_time_str = self.dynamicCall("GetChejanData(int)", self.realType.FID['주문체결']['주문/체결시간']) # 출력: '151028'
 
-            chegual_price = self.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['주문체결']['체결가']) # 출력: 2110 default : ''
+            chegual_price = self.dynamicCall("GetChejanData(int)", self.realType.FID['주문체결']['체결가']) # 출력: 2110 default : ''
             if chegual_price == '':
                 chegual_price = 0
             else:
                 chegual_price = int(chegual_price)
 
-            chegual_quantity = self.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['주문체결']['체결량']) # 출력: 5 default : ''
+            chegual_quantity = self.dynamicCall("GetChejanData(int)", self.realType.FID['주문체결']['체결량']) # 출력: 5 default : ''
             if chegual_quantity == '':
                 chegual_quantity = 0
             else:
                 chegual_quantity = int(chegual_quantity)
 
-            current_price = self.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['주문체결']['현재가']) # 출력: -6000
+            current_price = self.dynamicCall("GetChejanData(int)", self.realType.FID['주문체결']['현재가']) # 출력: -6000
             current_price = abs(int(current_price))
 
-            first_sell_price = self.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['주문체결']['(최우선)매도호가']) # 출력: -6010
+            first_sell_price = self.dynamicCall("GetChejanData(int)", self.realType.FID['주문체결']['(최우선)매도호가']) # 출력: -6010
             first_sell_price = abs(int(first_sell_price))
 
-            first_buy_price = self.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['주문체결']['(최우선)매수호가']) # 출력: -6000
+            first_buy_price = self.dynamicCall("GetChejanData(int)", self.realType.FID['주문체결']['(최우선)매수호가']) # 출력: -6000
             first_buy_price = abs(int(first_buy_price))
 
             ######## 새로 들어온 주문이면 주문번호 할당
@@ -675,34 +675,34 @@ class Kiwoom(QAxWidget):
             self.not_account_stock_dict[order_number].update({"(최우선)매수호가": first_buy_price})
 
         elif int(sGubun) == 1: #잔고
-            account_num = self.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['잔고']['계좌번호'])
-            sCode = self.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['잔고']['종목코드'])[1:]
+            account_num = self.dynamicCall("GetChejanData(int)", self.realType.FID['잔고']['계좌번호'])
+            sCode = self.dynamicCall("GetChejanData(int)", self.realType.FID['잔고']['종목코드'])[1:]
 
-            stock_name = self.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['잔고']['종목명'])
+            stock_name = self.dynamicCall("GetChejanData(int)", self.realType.FID['잔고']['종목명'])
             stock_name = stock_name.strip()
 
-            current_price = self.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['잔고']['현재가'])
+            current_price = self.dynamicCall("GetChejanData(int)", self.realType.FID['잔고']['현재가'])
             current_price = abs(int(current_price))
 
-            stock_quan = self.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['잔고']['보유수량'])
+            stock_quan = self.dynamicCall("GetChejanData(int)", self.realType.FID['잔고']['보유수량'])
             stock_quan = int(stock_quan)
 
-            like_quan = self.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['잔고']['주문가능수량'])
+            like_quan = self.dynamicCall("GetChejanData(int)", self.realType.FID['잔고']['주문가능수량'])
             like_quan = int(like_quan)
 
-            buy_price = self.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['잔고']['매입단가'])
+            buy_price = self.dynamicCall("GetChejanData(int)", self.realType.FID['잔고']['매입단가'])
             buy_price = abs(int(buy_price))
 
-            total_buy_price = self.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['잔고']['총매입가']) # 계좌에 있는 종목의 총매입가
+            total_buy_price = self.dynamicCall("GetChejanData(int)", self.realType.FID['잔고']['총매입가']) # 계좌에 있는 종목의 총매입가
             total_buy_price = int(total_buy_price)
 
-            meme_gubun = self.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['잔고']['매도매수구분'])
-            meme_gubun = self.realType.REALTYPE['매도수구분'][meme_gubun]
+            meme_gubun = self.dynamicCall("GetChejanData(int)", self.realType.FID['잔고']['매도매수구분'])
+            meme_gubun = self.realType.FID['매도수구분'][meme_gubun]
 
-            first_sell_price = self.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['잔고']['(최우선)매도호가'])
+            first_sell_price = self.dynamicCall("GetChejanData(int)", self.realType.FID['잔고']['(최우선)매도호가'])
             first_sell_price = abs(int(first_sell_price))
 
-            first_buy_price = self.dynamicCall("GetChejanData(int)", self.realType.REALTYPE['잔고']['(최우선)매수호가'])
+            first_buy_price = self.dynamicCall("GetChejanData(int)", self.realType.FID['잔고']['(최우선)매수호가'])
             first_buy_price = abs(int(first_buy_price))
 
             if sCode not in self.jango_dict.keys():

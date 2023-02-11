@@ -20,7 +20,7 @@ class Thread3(QThread):
         # 계좌번호 가져오는 부분은 Qthread_3 분리 시 로그인 후 계좌번호를 가져오는 함수로 교체된다. Lecture_0529.py
 
         ################# 매수관련 변수
-        self.Load_code()  # 매수 종목/금액/수량 가져오기
+        # self.Load_code()  # 매수 종목/금액/수량 가져오기
         self.orderitmelist_1 = []  # 중복 매수 금지
         self.orderitmelist_2 = []  # 중복 익절 금지
         self.orderitmelist_3 = []  # 중복 손절 금지
@@ -61,34 +61,34 @@ class Thread3(QThread):
         self.k.kiwoom.OnReceiveRealData.connect(self.realdata_slot)  # 실시간 데이터를 받아오는 곳
         self.k.kiwoom.OnReceiveChejanData.connect(self.chejan_slot)  # (주문접수, 체결통보)=0, (잔고변경) = 1 데이터 전송
 
-    def Load_code(self):
-
-        if os.path.exists("dist/Selected_code.txt"):
-            f = open("dist/Selected_code.txt", "r", encoding="utf8")
-            lines = f.readlines()  # 여러 종목이 저장되어 있다면 모든 항목을 가져온다.
-            screen = 4000
-            for line in lines:
-                if line != "":  # 만약에 line이 비어 있지 않다면
-                    ls = line.split("\t")  # \t(tap)로 구분을 지어 놓는다.
-                    t_code = ls[0]
-                    t_name = ls[1]
-                    curren_price = ls[2]
-                    dept = ls[3]
-                    mesu = ls[4]
-                    n_o_stock = ls[5]
-                    profit = ls[6]
-                    loss = ls[7].split("\n")[0]
-
-                    self.k.portfolio_stock_dict.update({t_code: {"종목명": t_name}})
-                    self.k.portfolio_stock_dict[t_code].update({"현재가": int(curren_price)})
-                    self.k.portfolio_stock_dict[t_code].update({"신용비율": dept})
-                    self.k.portfolio_stock_dict[t_code].update({"매수가": int(mesu)})
-                    self.k.portfolio_stock_dict[t_code].update({"매수수량": int(n_o_stock)})
-                    self.k.portfolio_stock_dict[t_code].update({"익절가": int(profit)})
-                    self.k.portfolio_stock_dict[t_code].update({"손절가": int(loss)})
-                    self.k.portfolio_stock_dict[t_code].update({"주문용스크린번호": screen})  # 아래 내용을 업데이트
-                    screen += 1
-            f.close()
+    # def Load_code(self):
+    #
+    #     if os.path.exists("dist/Selected_code.txt"):
+    #         f = open("dist/Selected_code.txt", "r", encoding="utf8")
+    #         lines = f.readlines()  # 여러 종목이 저장되어 있다면 모든 항목을 가져온다.
+    #         screen = 4000
+    #         for line in lines:
+    #             if line != "":  # 만약에 line이 비어 있지 않다면
+    #                 ls = line.split("\t")  # \t(tap)로 구분을 지어 놓는다.
+    #                 t_code = ls[0]
+    #                 t_name = ls[1]
+    #                 curren_price = ls[2]
+    #                 dept = ls[3]
+    #                 mesu = ls[4]
+    #                 n_o_stock = ls[5]
+    #                 profit = ls[6]
+    #                 loss = ls[7].split("\n")[0]
+    #
+    #                 self.k.portfolio_stock_dict.update({t_code: {"종목명": t_name}})
+    #                 self.k.portfolio_stock_dict[t_code].update({"현재가": int(curren_price)})
+    #                 self.k.portfolio_stock_dict[t_code].update({"신용비율": dept})
+    #                 self.k.portfolio_stock_dict[t_code].update({"매수가": int(mesu)})
+    #                 self.k.portfolio_stock_dict[t_code].update({"매수수량": int(n_o_stock)})
+    #                 self.k.portfolio_stock_dict[t_code].update({"익절가": int(profit)})
+    #                 self.k.portfolio_stock_dict[t_code].update({"손절가": int(loss)})
+    #                 self.k.portfolio_stock_dict[t_code].update({"주문용스크린번호": screen})  # 아래 내용을 업데이트
+    #                 screen += 1
+    #         f.close()
 
     def realdata_slot(self, sCode, sRealType, sRealData):  # 실시간으로 서버에서 데이터들이 날라온다.
 
