@@ -8,8 +8,9 @@ from tr_data_handler import TrDataHandler
 from real_data_handler import RealDataHandler
 from orders import Order
 from logging_handler import LoggingHandler
+import pandas as pd
 
-form_class = uic.loadUiType("Initial.ui")[0]
+form_class = uic.loadUiType("Initial2.ui")[0]
 
 class MyWindow(QMainWindow, QWidget, form_class, LoggingHandler):
     def __init__(self, *args, **kwargs):
@@ -23,13 +24,21 @@ class MyWindow(QMainWindow, QWidget, form_class, LoggingHandler):
 
         # first of all, account number is needed
         self.get_account_info()
+
+        # retrieving all the codes and names of KOSPI and KOSDAQ
+        # self.code_dict = {"005930": {"종목명": "삼성전자"},
+        #                   "373220": {"종목명": "LG에너지솔루션"},
+        #                   ...}
+        self.code_dict = None
+        self.get_item_list()
+
+        # sotck basic info (Dataframe) which will be set by TR request
+        # later while constructing the self.tr_handler
+        self.stock_info = pd.DataFrame()
+
         # worker threads: tr_data_handler, real_data_handler
         self.tr_handler = TrDataHandler(self)
         self.real_handler = RealDataHandler(self)
-
-        # retrieving all the codes and names of KOSPI and KOSDAQ
-        self.code_dict = None
-        self.get_item_list()
 
         # when clicked, retrieves account info
         # self.acc_manage.clicked.connect(self.a_manage)

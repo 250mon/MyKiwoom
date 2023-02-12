@@ -20,6 +20,7 @@ class KwmTrApi(QObject, LoggingHandler):
 
         # Tr Data slots for Kiwoom
         self.ocx.OnReceiveTrData.connect(self.OnReceiveTrData)
+        self.ocx.OnReceiveMsg.connect(self.OnReceiveMsg)
 
         # dictionary of output items for each tr code
         self.tr_output = {}
@@ -57,19 +58,15 @@ class KwmTrApi(QObject, LoggingHandler):
         # - KOA_NORMAL_SELL_KQ_ORD : 코스피 매도
         # - KOA_NORMAL_KQ_CANCEL   : 코스피 주문 취소
         # - KOA_NORMAL_KQ_MODIFY   : 코스피 주문 변경
-        if trcode in [
-            'KOA_NORMAL_BUY_KP_ORD',
-            'KOA_NORMAL_SELL_KP_ORD',
-            'KOA_NORMAL_KP_CANCEL',
-            'KOA_NORMAL_KP_MODIFY',
-            'KOA_NORMAL_BUY_KQ_ORD',
-            'KOA_NORMAL_SELL_KQ_ORD',
-            'KOA_NORMAL_KQ_CANCEL',
-            'KOA_NORMAL_KQ_MODIFY',
-        ]:
-            # data = self.GetCommData()
-            self.log.debug('call back')
-            # self.parent.onRcvTrData(screen, rqname)
+        if trcode in ['KOA_NORMAL_BUY_KP_ORD',
+                      'KOA_NORMAL_SELL_KP_ORD',
+                      'KOA_NORMAL_KP_CANCEL',
+                      'KOA_NORMAL_KP_MODIFY',
+                      'KOA_NORMAL_BUY_KQ_ORD',
+                      'KOA_NORMAL_SELL_KQ_ORD',
+                      'KOA_NORMAL_KQ_CANCEL',
+                      'KOA_NORMAL_KQ_MODIFY']:
+            self.log.debug(f'주문번호는 아마도... {record}')
             return None
 
         output_items = []
@@ -109,6 +106,9 @@ class KwmTrApi(QObject, LoggingHandler):
 
         except Exception as e:
             self.log.error(f'onReceiveTrData: Error occured {e}')
+
+    def OnReceiveMsg(self, screen, rqname, trcode, msg):
+        self.log.debug(f'OnReceiveMsg {screen}, {rqname}, {trcode}, {msg}')
 
     # -------------------------------------------------------------------------------------------------------------------
     # OpenAPI+ 메서드

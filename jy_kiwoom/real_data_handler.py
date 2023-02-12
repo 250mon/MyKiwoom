@@ -26,15 +26,15 @@ class RealDataHandler(QThread, LoggingHandler):
         self.main.real_code_list_view.setModel(self.model)
 
         # connect to UI
-        self.main.input_real_code_le.textChanged[str].connect(self._code_input)
-        self.main.register_btn.clicked.connect(self._register_btn_clicked)
-        self.main.deregister_btn.clicked.connect(self._deregister_btn_clicked)
-        self.main.deregister_all_btn.clicked.connect(self._deregister_all)
+        self.main.input_real_code_le.textChanged[str].connect(self.code_input)
+        self.main.register_btn.clicked.connect(self.register_btn_clicked)
+        self.main.deregister_btn.clicked.connect(self.deregister_btn_clicked)
+        self.main.deregister_all_btn.clicked.connect(self.deregister_all)
 
         # initialize
-        self._deregister_all()
+        self.deregister_all()
 
-    def _code_input(self, text):
+    def code_input(self, text):
         if text in self.main.code_dict.keys():
             code_name = self.main.code_dict[text]["종목명"]
             self.log.debug(f'RealDataHandler _code_input {text} {code_name}')
@@ -43,7 +43,7 @@ class RealDataHandler(QThread, LoggingHandler):
         else:
             self.input_code = None
 
-    def _register_btn_clicked(self):
+    def register_btn_clicked(self):
         if self.input_code is None:
             self.log.debug('No code input to register')
         elif self.input_code in self.code_list:
@@ -51,9 +51,9 @@ class RealDataHandler(QThread, LoggingHandler):
         else:
             self.code_list.append(self.input_code)
             self.model.appendRow(QStandardItem(self.input_code))
-            self._register_real_code()
+            self.register_real_code()
 
-    def _register_real_code(self):
+    def register_real_code(self):
         screen_no = Kwm().get_screen_no("Real")
         fid_list = []
         fid_list.append(FID['주식체결']['체결시간'])
@@ -61,7 +61,7 @@ class RealDataHandler(QThread, LoggingHandler):
         self.log.debug(f'\t{self.code_list} {fid_list}')
         self.real_api.set_real_reg(screen_no, self.code_list, fid_list, "0")
 
-    def _deregister_btn_clicked(self):
+    def deregister_btn_clicked(self):
         if self.input_code is None:
             self.log.debug('No code input to deregister')
         elif self.input_code in self.code_list:
@@ -70,14 +70,14 @@ class RealDataHandler(QThread, LoggingHandler):
             self.code_list.remove(self.input_code)
             self.model.clear()
             map(self.model.appendRow, map(QStandardItem, self.code_list))
-            self._deregister_real_code(self.input_code)
+            self.deregister_real_code(self.input_code)
         else:
             self.log.debug('The code entered is not registered')
 
-    def _deregister_real_code(self, code):
+    def deregister_real_code(self, code):
         self.real_api.SetRealRemove("ALL", list(code))
 
-    def _deregister_all(self):
+    def deregister_all(self):
         """
         deregister all real data
         :return:

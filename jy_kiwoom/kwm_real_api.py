@@ -18,6 +18,7 @@ class KwmRealApi(QObject, LoggingHandler):
 
         # Data slots for Real data
         self.ocx.OnReceiveRealData.connect(self.OnReceiveRealData)
+        self.ocx.OnReceiveChejanData.connect(self.OnReceiveChejanData)
 
         self.real_fid = {}
 
@@ -121,6 +122,20 @@ class KwmRealApi(QObject, LoggingHandler):
         """
         data = self.ocx.dynamicCall("GetCommRealData(QString, int)", code, fid)
         return data
+
+    def OnReceiveChejanData(self, gubun, item_cnt, fid_list):
+        """
+        주문접수, 체결, 잔고 변경시 이벤트가 발생
+        :param gubun: '0': 접수, 체결, '1': 잔고 변경
+        :param item_cnt: 아이템 갯수
+        :param fid_list: fid list
+        :return:
+        """
+        output = {'gubun': gubun}
+        for fid in fid_list.split(';'):
+            data = self.GetChejanData(fid)
+            output[fid] = data
+
 
     def GetChejanData(self, fid):
         """
