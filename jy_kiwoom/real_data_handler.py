@@ -16,11 +16,6 @@ class RealDataHandler(QThread, LoggingHandler):
         # choose tickers to monitor
         self.input_code = None
         self.code_list = []
-        # self.real_codes = ["005930", "086520"]
-
-        # register real data of markets' status
-        # self.register_markets_status()
-        # self.register_trading_data()
 
         self.model = QStandardItemModel()
         self.main.real_code_list_view.setModel(self.model)
@@ -33,6 +28,9 @@ class RealDataHandler(QThread, LoggingHandler):
 
         # initialize
         self.deregister_all()
+
+        # register real data of markets' status
+        self.register_markets_status()
 
     def code_input(self, text):
         if text in self.main.code_dict.keys():
@@ -55,8 +53,7 @@ class RealDataHandler(QThread, LoggingHandler):
 
     def register_real_code(self):
         screen_no = Kwm().get_screen_no("Real")
-        fid_list = []
-        fid_list.append(FID['주식체결']['체결시간'])
+        fid_list = [FID['주식체결']['체결시간']]
         self.log.debug('Real time data being registered ... ')
         self.log.debug(f'\t{self.code_list} {fid_list}')
         self.real_api.set_real_reg(screen_no, self.code_list, fid_list, "0")
@@ -75,7 +72,7 @@ class RealDataHandler(QThread, LoggingHandler):
             self.log.debug('The code entered is not registered')
 
     def deregister_real_code(self, code):
-        self.real_api.SetRealRemove("ALL", list(code))
+        self.real_api.SetRealRemove("ALL", code)
 
     def deregister_all(self):
         """
@@ -98,7 +95,7 @@ class RealDataHandler(QThread, LoggingHandler):
         screen_no = Kwm().get_screen_no("Real")
         self.real_api.set_real_reg(screen_no, self.code_list, [FID['장시작시간']['장운영구분']], "0")
 
-    def handle_real_data(self, real_data, rtype):
+    def handle_real_data(self, rtype, real_data):
         """
         call-back function which handles real data received from api
         :param read_data: {"code": code, fid1: val1, fid2: val2 ...}

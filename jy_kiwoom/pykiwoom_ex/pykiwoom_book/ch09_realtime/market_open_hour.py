@@ -49,8 +49,11 @@ class MyWindow(QMainWindow):
 
 
     def SetRealReg(self, screen_no, code_list, fid_list, real_type):
-        self.ocx.dynamicCall("SetRealReg(QString, QString, QString, QString)",
+        ret = self.ocx.dynamicCall("SetRealReg(QString, QString, QString, QString)",
                               screen_no, code_list, fid_list, real_type)
+        if ret is not None:
+            print(f'SetRealRemove result: {ret}')
+        return ret
 
     def DisConnectRealData(self, screen_no):
         self.ocx.dynamicCall("DisConnectRealData(QString)", screen_no)

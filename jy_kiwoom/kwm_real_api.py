@@ -28,7 +28,8 @@ class KwmRealApi(QObject, LoggingHandler):
         :param screen:
         :param code_list: ["005930", "000660"]
         :param fid_list: ["215", "20", "214"]
-        :param opt_type:
+        :param opt_type: "0" deregister pre-registered codes and register new ones
+                         "1" register new ones in addition to the pre-registered
         :return:
         """
         # register fid
@@ -76,13 +77,14 @@ class KwmRealApi(QObject, LoggingHandler):
         :param del_code: 실시간 해제할 종목
         :return: 통신결과 (None if success)
         """
+        arg_list = [screen, del_code]
+        self.log.debug(f'SetRealRemove({arg_list}) ...')
         ret = self.ocx.dynamicCall("SetRealRemove(QString, QString)", screen, del_code)
         if ret is not None:
             self.log.debug(f'SetRealRemove result: {ret} {ERR_CODE[ret]}')
         return ret
 
     def OnReceiveRealData(self, code, rtype, data):
-        self.log.debug(f'OnReceiveRealData {code}')
         """실시간 데이터를 받는 시점에 콜백되는 메소드입니다.
 
         Args:
@@ -90,6 +92,7 @@ class KwmRealApi(QObject, LoggingHandler):
             rtype (str): 리얼타입 (주식시세, 주식체결, ...)
             data (str): 실시간 데이터 전문
         """
+        self.log.debug(f'OnReceiveRealData code:{code} rtype:{rtype} data:{data}')
         # if self.real_fid is empty or the code is not registered, just ignore
         # the incoming data
         if bool(self.real_fid) or code not in self.real_fid.keys():
@@ -102,7 +105,7 @@ class KwmRealApi(QObject, LoggingHandler):
             real_data[fid] = val
 
         # call back
-        self.handler.handle_rcv_real_data(rtype, real_data)
+        self.handler.handle_real_data(rtype, real_data)
 
     def DisconnectRealData(self, screen):
         """

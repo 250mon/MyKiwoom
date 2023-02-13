@@ -15,7 +15,7 @@ if __name__ == "__main__":
 
     km.put_real(real_cmd)
     while True:
-        data = km.get_real('장시작시간')
+        data = km.get_real()
         print(data)
 
 
