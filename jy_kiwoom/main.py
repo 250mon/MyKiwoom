@@ -34,7 +34,7 @@ class MyWindow(QMainWindow, QWidget, form_class, LoggingHandler):
 
         # sotck basic info (Dataframe) which will be set by TR request
         # later while constructing the self.tr_handler
-        self.stock_info = pd.DataFrame()
+        # self.stock_info = pd.DataFrame()
 
         # worker threads: tr_data_handler, real_data_handler
         self.tr_handler = TrDataHandler(self)

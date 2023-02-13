@@ -1,9 +1,13 @@
+import os
 import pandas as pd
 from PyQt5.QtCore import QThread, pyqtSlot
 from kwm_connect import Kwm
 from kwm_tr_api import KwmTrApi
 from pandas_table import PandasModel
 from logging_handler import LoggingHandler
+from time import time, sleep
+from datetime import date
+
 
 class TrDataHandler(QThread, LoggingHandler):
     def __init__(self, parent=None):
@@ -13,11 +17,14 @@ class TrDataHandler(QThread, LoggingHandler):
         # get a ref of Kwm() singleton instance
         self.tr_api = KwmTrApi(self)
 
+        # file name of stocks info
+        self.info_file_name = "stocks_info.h5"
+
         # get screen number
         self.tr_screen = Kwm().get_screen_no("Tr")
 
         self.get_acc_detailed_info()
-        # self.get_stock_basic_info()
+        self.get_stock_basic_info()
 
         # TR request being made by a user clicking
         self.main.call_account.clicked.connect(self.get_acc_detailed_info)
@@ -39,7 +46,6 @@ class TrDataHandler(QThread, LoggingHandler):
         model = PandasModel(df_total)
         self.main.tableView0.setModel(model)
 
-
         cols = ["종목번호", "종목명", "보유수량", "매입가", "수익률(%)", "현재가", "매입금액", "매매가능수량"]
         df_per_ticker = df.loc[:, cols].dropna()
         df_per_ticker.iloc[:, 2:] = self._data_to_numeric(df_per_ticker.iloc[:, 2:])
@@ -51,18 +57,36 @@ class TrDataHandler(QThread, LoggingHandler):
         filling self.main.stock_info
         :return:
         """
+
+        if os.path.exists(self.info_file_name):
+            creation_time = date.fromtimestamp(os.path.getmtime(self.info_file_name))
+            elapsed_time = date.today() - creation_time
+            if elapsed_time.days < 30:
+                self.log.debug("Stock basic info file not updated because it is yet quite new")
+                return
+
+        self.log.debug("stock basic info file being updated ...")
         self.log.info("주식기본정보요청")
         codes = list(self.main.code_dict.keys())
-        # for ticker in self.main.code_dict.keys():
-        for i in range(2):
-            ticker = codes[i]
+
+        stock_info_df = pd.DataFrame()
+        for i, ticker in enumerate(self.main.code_dict.keys()):
+        # for i in range(2):
+        #     ticker = codes[i]
             df = self.tr_api.block_request("주식기본정보요청",
                                            "opt10001",
                                            종목코드=ticker,
                                            screen=self.tr_screen)
-            self.main.stock_info = pd.concat([self.main.stock_info, df])
-        print(self.main.stock_info)
+            df.set_index("종목코드")
+            stock_info_df = pd.concat([stock_info_df, df])
+            if i % 10 == 0:
+                sleep(3)
+            else:
+                sleep(0.5)
 
+        stock_info_df.to_hdf("stocks_info.h5", "table", mode="w")
+
+        self.log.debug(pd.read_hdf("stocks_info.h5", "stock_basic_info"))
 
     def _data_to_numeric(self, data_df):
         """
@@ -73,7 +97,6 @@ class TrDataHandler(QThread, LoggingHandler):
         """
         data_df = data_df.apply(pd.to_numeric)
         for c in data_df.columns:
-            self.log.debug(c)
             if "%" in c:
                 data_df[c] = data_df[c].apply(lambda x: '{0:.2f}'.format(x))
             else:

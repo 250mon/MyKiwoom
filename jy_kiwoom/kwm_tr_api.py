@@ -39,7 +39,7 @@ class KwmTrApi(QObject, LoggingHandler):
             row_data = []
             for item in items:
                 data = self.GetCommData(trcode, rqname, row, item)
-                self.log.debug(f"kwm_api.OnReceiveTrData: data from GetCommData..\n{data}")
+                # self.log.debug(f"get_data: data from GetCommData..\n{data}")
                 row_data.append(data)
             data_list.append(row_data)
 
@@ -88,7 +88,7 @@ class KwmTrApi(QObject, LoggingHandler):
                 output_items += list(output.values())[0]
         else:
             output_items = self.tr_output[trcode]
-        self.log.debug(f'output_items ##################\n {output_items}')
+        # self.log.debug(f'output_items ##################\n {output_items}')
 
         try:
             # remained data
@@ -98,7 +98,7 @@ class KwmTrApi(QObject, LoggingHandler):
                 self.tr_remained = False
 
             df = self.get_data(trcode, rqname, output_items)
-            self.log.debug(df.head(3))
+            # self.log.debug(df.head(3))
             self.tr_data = df
 
             if self.tr_data_loop.isRunning():

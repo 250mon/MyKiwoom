@@ -93,19 +93,26 @@ class KwmRealApi(QObject, LoggingHandler):
             data (str): 실시간 데이터 전문
         """
         self.log.debug(f'OnReceiveRealData code:{code} rtype:{rtype} data:{data}')
+
+        # self.real_fid = {code: fid_list, ...}
         # if self.real_fid is empty or the code is not registered, just ignore
         # the incoming data
         if bool(self.real_fid) or code not in self.real_fid.keys():
             return
 
+        ###### returns data as it is
+        # call back
+        self.handler.handle_real_data(code, rtype, data)
+
+        ###### returns a dictionary result; real_data
         # real_data = {"code": "005930", fid1: val1, fid2: val2 ...}
-        real_data = {"code": code}
-        for fid in self.real_fid[code]:
-            val = self.GetCommRealData(code, fid)
-            real_data[fid] = val
+        # real_data = {"code": code}
+        # for fid in self.real_fid[code]:
+        #     val = self.GetCommRealData(code, fid)
+        #     real_data[fid] = val
 
         # call back
-        self.handler.handle_real_data(rtype, real_data)
+        # self.handler.handle_real_data(rtype, real_data)
 
     def DisconnectRealData(self, screen):
         """
@@ -134,10 +141,12 @@ class KwmRealApi(QObject, LoggingHandler):
         :param fid_list: fid list
         :return:
         """
-        output = {'gubun': gubun}
+        chejan_data = {}
         for fid in fid_list.split(';'):
             data = self.GetChejanData(fid)
-            output[fid] = data
+            chejan_data[fid] = data
+
+        self.main.handle_chejan_data(gubun, chejan_data)
 
 
     def GetChejanData(self, fid):

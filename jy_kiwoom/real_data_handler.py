@@ -1,3 +1,4 @@
+import pandas as pd
 from PyQt5.QtCore import QThread
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
 from kwm_connect import Kwm
@@ -95,15 +96,59 @@ class RealDataHandler(QThread, LoggingHandler):
         screen_no = Kwm().get_screen_no("Real")
         self.real_api.set_real_reg(screen_no, self.code_list, [FID['장시작시간']['장운영구분']], "0")
 
-    def handle_real_data(self, rtype, real_data):
+    # def handle_real_data(self, code, rtype, data):
+    #     """
+    #     call-back function which handles real data received from api
+    #     :param read_data: {"code": code, fid1: val1, fid2: val2 ...}
+    #     :return:
+    #     """
+
+    def handle_real_data(self, code, rtype, data):
         """
         call-back function which handles real data received from api
-        :param read_data: {"code": code, fid1: val1, fid2: val2 ...}
+        :param code: ticker
+        :param rtype: real type
+        :param data: item values
         :return:
         """
-        self.log.debug(f'handle real data {rtype} {real_data}')
+        self.log.debug(f'handle real data {rtype} {data}')
+
+        # check if rtype is defined in FID
+        if rtype not in FID.keys():
+            self.log.debug(f'OnReceiveRealData rtype {rtype} does not exist in FID')
+            return
+        data_df = pd.DataFrame(data=data, columns=FID[rtype].keys())
+
+        if rtype == "주식체결":
+            self.log.debug(f'주식체결 dataframe')
+            self.log.debug(data_df[['현재가', '등락율', '전일거래량대비(비율)', '체결강도']])
+        elif rtype == "주식호가잔량":
+            self.log.debug(f'주식호가잔량 dataframe')
+            self.log.debug(data_df)
+        elif rtype == "장시작시간":
+            self.log.debug(f'장시작시간 dataframe')
+            self.log.debug(data_df)
+        else:
+            pass
 
 
+    def handle_chejan_data(self, gubun, chejan_data):
+        """
+        call-back function which handles chejan data received from api
+        :param gubun: '0': 접수, 체결, '1': 잔고 변경
+        :param chejan_data: {fid: value ...}
+        :return:
+        """
+        self.log.debug(f'handle chejan data {gubun} {chejan_data}')
 
-
+        if gubun == "0":
+            # rtype "주문체결"
+            data_df = pd.DataFrame(data=chejan_data, columns=FID["주문체결"].keys())
+            self.log.debug(f'주문체결 dataframe')
+            self.log.debug(data_df)
+        else:
+            # rtype "잔고"
+            data_df = pd.DataFrame(data=chejan_data, columns=FID["잔고"].keys())
+            self.log.debug(f'잔고 dataframe')
+            self.log.debug(data_df)
 
