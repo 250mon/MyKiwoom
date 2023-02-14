@@ -149,6 +149,29 @@ class KwmMethodApi(QObject, LoggingHandler):
         data = self.ocx.dynamicCall("GetFutureList()")
         return data
 
+    def SendOrder(self, rqname, screen, accno, order_type, code, quantity, price, hoga, order_no):
+        """
+        주식 주문을 서버로 전송하는 메서드
+        시장가 주문시 주문단가는 0으로 입력해야 함 (가격을 입력하지 않음을 의미)
+        :param rqname: 사용자가 임의로 지정할 수 있는 요청 이름
+        :param screen: 화면번호 ('0000' 또는 '0' 제외한 숫자값으로 200개로 한정된 값
+        :param accno: 계좌번호 10자리
+        :param order_type: 1: 신규매수, 2: 신규매도, 3: 매수취소, 4: 매도취소, 5: 매수정정, 6: 매도정정
+        :param code: 종목코드
+        :param quantity: 주문수량
+        :param price: 주문단가
+        :param hoga: 00: 지정가, 03: 시장가,
+                     05: 조건부지정가, 06: 최유리지정가, 07: 최우선지정가,
+                     10: 지정가IOC, 13: 시장가IOC, 16: 최유리IOC,
+                     20: 지정가FOK, 23: 시장가FOK, 26: 최유리FOK,
+                     61: 장전시간외종가, 62: 시간외단일가, 81: 장후시간외종가
+        :param order_no: 원주문번호로 신규 주문시 공백, 정정이나 취소 주문시에는 원주문번호를 입력
+        :return:
+        """
+        ret = self.ocx.dynamicCall("SendOrder(QString, QString, QString, int, QString, int, int, QString, QString)",
+                                   [rqname, screen, accno, order_type, code, quantity, price, hoga, order_no])
+        return ret
+
 
 if not QApplication.instance():
     app = QApplication(sys.argv)

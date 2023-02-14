@@ -24,11 +24,12 @@ class TrDataHandler(QThread, LoggingHandler):
         self.tr_screen = Kwm().get_screen_no("Tr")
 
         self.get_acc_detailed_info()
-        self.get_stock_basic_info()
+        # self.get_stock_basic_info()
 
         # TR request being made by a user clicking
         self.main.call_account.clicked.connect(self.get_acc_detailed_info)
 
+    @pyqtSlot()
     def get_acc_detailed_info(self):
         self.log.info("계좌평가좌고내역조회")
         df = self.tr_api.block_request("계좌평가잔고내역요청",

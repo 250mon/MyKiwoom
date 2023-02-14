@@ -146,7 +146,7 @@ class KwmRealApi(QObject, LoggingHandler):
             data = self.GetChejanData(fid)
             chejan_data[fid] = data
 
-        self.main.handle_chejan_data(gubun, chejan_data)
+        self.handler.handle_chejan_data(gubun, chejan_data)
 
 
     def GetChejanData(self, fid):

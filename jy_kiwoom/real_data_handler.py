@@ -1,5 +1,5 @@
 import pandas as pd
-from PyQt5.QtCore import QThread
+from PyQt5.QtCore import QThread, pyqtSignal
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
 from kwm_connect import Kwm
 from kwm_real_api import KwmRealApi
@@ -8,6 +8,7 @@ from kwm_type import *   # REALTYPE, SENDTYPE
 
 
 class RealDataHandler(QThread, LoggingHandler):
+    chegyul = pyqtSignal()
     def __init__(self, parent=None):
         super().__init__(parent)
         self.main = parent
@@ -139,16 +140,18 @@ class RealDataHandler(QThread, LoggingHandler):
         :param chejan_data: {fid: value ...}
         :return:
         """
-        self.log.debug(f'handle chejan data {gubun} {chejan_data}')
+        self.log.debug(f'handle chejan data 구분:{gubun}')
 
         if gubun == "0":
             # rtype "주문체결"
-            data_df = pd.DataFrame(data=chejan_data, columns=FID["주문체결"].keys())
-            self.log.debug(f'주문체결 dataframe')
-            self.log.debug(data_df)
+            data_s = pd.Series(data=chejan_data.values(), index=chejan_data.keys())
+            data_s.reindex(FID["주문체결"].values())
+            self.log.debug(f'주문체결 Series')
+            self.log.debug(data_s)
         else:
             # rtype "잔고"
-            data_df = pd.DataFrame(data=chejan_data, columns=FID["잔고"].keys())
-            self.log.debug(f'잔고 dataframe')
-            self.log.debug(data_df)
+            data_s = pd.Series(data=chejan_data.values(), index=chejan_data.keys())
+            data_s.reindex(FID["잔고"].values())
+            self.log.debug(f'잔고 Series')
+            self.log.debug(data_s)
 
