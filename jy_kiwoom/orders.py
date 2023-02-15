@@ -2,9 +2,10 @@ from PyQt5.QtCore import QThread
 from kwm_connect import Kwm
 from kwm_method_api import KwmMethodApi
 from pandas_table import PandasModel
+from common_data import Ticker_Dict, My_Stock_Df
 from logging_handler import LoggingHandler
 
-class Order(QThread, LoggingHandler):
+class Order(LoggingHandler):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.main = parent
@@ -41,7 +42,7 @@ class Order(QThread, LoggingHandler):
         self.main.input_price_spinbox.valueChanged.connect(self.price_input)
         self.main.input_price_spinbox.setRange(0, 99999999)
         self.main.input_qty_spinbox.valueChanged.connect(self.quantity_input)
-        self.main.buy_btn.clicked.connect(self.order_buy)
+        self.main.buy_btn.clicked.connect(self.buy_btn_clicked)
 
     def limit_order_checked(self):
         self.order_price_type = "00"
@@ -65,8 +66,8 @@ class Order(QThread, LoggingHandler):
         :param text:
         :return:
         """
-        if text in self.main.code_dict.keys():
-            code_name = self.main.code_dict[text]["종목명"]
+        if text in Ticker_Dict.keys():
+            code_name = Ticker_Dict[text]["종목명"]
             self.log.debug(f'Order _code_input {text} {code_name}')
             self.order_ticker = text
             self.main.code_name_label.setText(code_name)
@@ -101,17 +102,39 @@ class Order(QThread, LoggingHandler):
         self.order_quantity = self.main.input_qty_spinbox.value()
         self.log.debug(f'Order _quantity_input {self.order_quantity}')
 
-    def order_buy(self):
+    def buy_btn_clicked(self):
         if self.order_quantity == 0:
             self.log.debug("Wrong order: Order quantity is set 0")
         elif self.is_limit_order() and self.order_price == 0:
             self.log.debug("Wrong order: Order price is set 0 when it is a limit order")
-        elif self.is_ticker_set:
-            rqname = "매수 " + self.main.code_dict[self.order_ticker]["종목명"]
+        elif self.is_ticker_set and self:
+            rqname = "매수 " + Ticker_Dict[self.order_ticker]["종목명"]
             self.log.info(f"Order _order_buy {rqname} {self.order_quantity}")
             self.place_order(rqname)
         else:
             self.log.debug("Wrong order: Order ticker is incorrect")
+
+        # clear the input fields
+        self.main.input_code_le.clear()
+        self.main.input_price_spinbox.setValue(0)
+        self.main.input_qty_spinbox.setValue(0)
+
+    def sell_btn_clicked(self):
+        if self.order_quantity == 0:
+            self.log.debug("Wrong order: Order quantity is set 0")
+        elif self.is_limit_order() and self.order_price == 0:
+            self.log.debug("Wrong order: Order price is set 0 when it is a limit order")
+        elif self.is_ticker_set and self.order_ticker in My_Stock_Df.index():
+            rqname = "매도 " + Ticker_Dict[self.order_ticker]["종목명"]
+            self.log.info(f"Order _order_buy {rqname} {self.order_quantity}")
+            self.place_order(rqname)
+        else:
+            self.log.debug("Wrong order: Order ticker is incorrect")
+
+        # clear the input fields
+        self.main.input_code_le.clear()
+        self.main.input_price_spinbox.setValue(0)
+        self.main.input_qty_spinbox.setValue(0)
 
     def place_order(self, req_name):
         self.api.SendOrder(req_name,

@@ -3,6 +3,7 @@ import pandas as pd
 from PyQt5.QtCore import QThread, pyqtSlot
 from kwm_connect import Kwm
 from kwm_tr_api import KwmTrApi
+from common_data import Ticker_Dict, My_Stock_Df
 from pandas_table import PandasModel
 from logging_handler import LoggingHandler
 from time import time, sleep
@@ -48,9 +49,9 @@ class TrDataHandler(QThread, LoggingHandler):
         self.main.tableView0.setModel(model)
 
         cols = ["종목번호", "종목명", "보유수량", "매입가", "수익률(%)", "현재가", "매입금액", "매매가능수량"]
-        df_per_ticker = df.loc[:, cols].dropna()
-        df_per_ticker.iloc[:, 2:] = self._data_to_numeric(df_per_ticker.iloc[:, 2:])
-        model = PandasModel(df_per_ticker)
+        My_Stock_Df = df.loc[:, cols].dropna()
+        My_Stock_Df.iloc[:, 2:] = self._data_to_numeric(My_Stock_Df.iloc[:, 2:])
+        model = PandasModel(My_Stock_Df)
         self.main.tableView1.setModel(model)
 
     def get_stock_basic_info(self):
@@ -68,10 +69,10 @@ class TrDataHandler(QThread, LoggingHandler):
 
         self.log.debug("stock basic info file being updated ...")
         self.log.info("주식기본정보요청")
-        codes = list(self.main.code_dict.keys())
+        codes = list(Ticker_Dict.keys())
 
         stock_info_df = pd.DataFrame()
-        for i, ticker in enumerate(self.main.code_dict.keys()):
+        for i, ticker in enumerate(Ticker_Dict.keys()):
         # for i in range(2):
         #     ticker = codes[i]
             df = self.tr_api.block_request("주식기본정보요청",

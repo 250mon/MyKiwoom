@@ -4,11 +4,11 @@ from PyQt5.QtCore import *
 from PyQt5 import uic
 from kwm_connect import Kwm
 from kwm_method_api import KwmMethodApi
+from common_data import Ticker_Dict, My_Stock_Df
 from tr_data_handler import TrDataHandler
 from real_data_handler import RealDataHandler
 from orders import Order
 from logging_handler import LoggingHandler
-import pandas as pd
 
 form_class = uic.loadUiType("Initial2.ui")[0]
 
@@ -26,11 +26,10 @@ class MyWindow(QMainWindow, QWidget, form_class, LoggingHandler):
         self.get_account_info()
 
         # retrieving all the codes and names of KOSPI and KOSDAQ
-        # self.code_dict = {"005930": {"종목명": "삼성전자"},
+        # Ticker_Dict = {"005930": {"종목명": "삼성전자"},
         #                   "373220": {"종목명": "LG에너지솔루션"},
         #                   ...}
-        self.code_dict = None
-        self.get_item_list()
+        self.get_ticker_dict()
 
         # sotck basic info (Dataframe) which will be set by TR request
         # later while constructing the self.tr_handler
@@ -47,7 +46,6 @@ class MyWindow(QMainWindow, QWidget, form_class, LoggingHandler):
 
     def start(self):
         order = Order(self)
-        order.start
 
     def get_account_info(self):
         print('get account info')
@@ -58,29 +56,36 @@ class MyWindow(QMainWindow, QWidget, form_class, LoggingHandler):
             self.accComboBox.addItem(acc_no)
 
     def get_acc_no(self):
+        """
+        Gettiing account number from combobox selection
+        :return:
+        """
         return self.accComboBox.currentText()
 
-    def get_item_list(self):
+    def get_ticker_dict(self):
         """
-        self.code_dict = {"005930": {"종목명": "삼성전자"},
+        Getting Kospi, Kosdaq ticker list and making a dictionary from it
+        Ticker_Dict = {"005930": {"종목명": "삼성전자"},
                           "373220": {"종목명": "LG에너지솔루션"},
                           ...}
         :return:
         """
         markets = ["0", "10"]
-        codes = list(map(self.method_api.GetCodeListByMarket, markets))
-        kospi_codes = codes[0]
-        kosdaq_codes = codes[1]
-        # retrieving code names
-        kospi_names = list(map(self.method_api.GetMasterCodeName, kospi_codes))
-        kosdaq_names = list(map(self.method_api.GetMasterCodeName, kosdaq_codes))
-        # creats code dicts
-        kospi_code_dict = {code: {"종목명": name} for code, name
-                           in zip(kospi_codes, kospi_names)}
-        kosdaq_code_dict = {code: {"종목명": name} for code, name
-                            in zip(kosdaq_codes, kosdaq_names)}
+        tickers = list(map(self.method_api.GetCodeListByMarket, markets))
+        kospi_tickers = tickers[0]
+        kosdaq_tickers = tickers[1]
+        # retrieving ticker names
+        kospi_names = list(map(self.method_api.GetMasterCodeName, kospi_tickers))
+        kosdaq_names = list(map(self.method_api.GetMasterCodeName, kosdaq_tickers))
+        # creats ticker dicts
+        kospi_ticker_dict = {ticker: {"종목명": name} for ticker, name
+                           in zip(kospi_tickers, kospi_names)}
+        kosdaq_ticker_dict = {ticker: {"종목명": name} for ticker, name
+                            in zip(kosdaq_tickers, kosdaq_names)}
         # combining the dicts
-        self.code_dict = {**kospi_code_dict, **kosdaq_code_dict}
+        Ticker_Dict = {**kospi_ticker_dict, **kosdaq_ticker_dict}
+        print("#######################Ticker_Dict")
+        print(Ticker_Dict)
 
     def setup_timer(self):
         self.timer1.setInterval(3000)

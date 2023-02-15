@@ -3,6 +3,7 @@ from PyQt5.QtCore import QThread, pyqtSignal
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
 from kwm_connect import Kwm
 from kwm_real_api import KwmRealApi
+from common_data import Ticker_Dict
 from logging_handler import LoggingHandler
 from kwm_type import *   # REALTYPE, SENDTYPE
 
@@ -35,8 +36,8 @@ class RealDataHandler(QThread, LoggingHandler):
         self.register_markets_status()
 
     def code_input(self, text):
-        if text in self.main.code_dict.keys():
-            code_name = self.main.code_dict[text]["종목명"]
+        if text in Ticker_Dict.keys():
+            code_name = Ticker_Dict[text]["종목명"]
             self.log.debug(f'RealDataHandler _code_input {text} {code_name}')
             self.main.real_code_name_label.setText(code_name)
             self.input_code = text
