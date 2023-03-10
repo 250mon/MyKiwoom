@@ -5,6 +5,7 @@ from pykiwoom import parser
 import pandas as pd
 from kwm_connect import Kwm
 from logging_handler import LoggingHandler
+from time import sleep
 
 
 class KwmTrApi(QObject, LoggingHandler):
@@ -12,6 +13,7 @@ class KwmTrApi(QObject, LoggingHandler):
         super().__init__()
         # OCX instance
         self.ocx = Kwm().ocx
+        self.min_interval = 0.5
 
         # Event loop
         self.tr_data_loop = QEventLoop()
@@ -23,10 +25,9 @@ class KwmTrApi(QObject, LoggingHandler):
         # flag for more data to come
         self.tr_remained = False
 
-    def register_slots(self, on_recv_tr_data, on_recv_msg):
         # Tr Data slots for Kiwoom
-        self.ocx.OnReceiveTrData.connect(on_recv_tr_data)
-        self.ocx.OnReceiveMsg.connect(on_recv_msg)
+        self.ocx.OnReceiveTrData.connect(self.OnReceiveTrData)
+        self.ocx.OnReceiveMsg.connect(self.OnReceiveMsg)
 
     def get_data(self, trcode, rqname, items):
         rows = self.GetRepeatCnt(trcode, rqname)
@@ -87,7 +88,7 @@ class KwmTrApi(QObject, LoggingHandler):
                 output_items += list(output.values())[0]
         else:
             output_items = self.tr_output[trcode]
-        # self.log.debug(f'output_items ##################\n {output_items}')
+        self.log.debug(f'output_items ##################\n {output_items}')
 
         try:
             # remained data
@@ -97,7 +98,8 @@ class KwmTrApi(QObject, LoggingHandler):
                 self.tr_remained = False
 
             df = self.get_data(trcode, rqname, output_items)
-            # self.log.debug(df.head(3))
+            self.log.debug(df.head(3))
+            self.log.debug(df.shape)
             self.tr_data = df
 
             if self.tr_data_loop.isRunning():
@@ -138,29 +140,40 @@ class KwmTrApi(QObject, LoggingHandler):
         else:
             self.tr_output[trcode] = kwargs["output_items"]
 
-        # set input
-        for key in kwargs:
-            kwarg_key = key.lower()
-            if kwarg_key != "output" and kwarg_key != "screen":
-                self.SetInputValue(key, kwargs[key])
+        self._set_input_value(kwargs)
 
         # initialize remaining data flag
         self.tr_remained = False
 
         # initial request
-        self.CommRqData(rqname, trcode, "0", screen)
+        self.CommRqData(rqname, trcode, 0, screen)
+        self.log.debug(f'Calling CommRqData #1 ...')
 
         # blocking until onReceiveTrData is called and self.tr_data gets filled
         self.tr_data_loop.exec_()
         result_df = self.tr_data.copy()
 
         # if there is more data to come, more requests are made
+        i = 2
         while self.tr_remained:
+            sleep(self.min_interval)
+            self._set_input_value(kwargs)
             self.CommRqData(rqname, trcode, 2, screen)
+            self.log.debug(f'Calling CommRqData #{i} ...')
             self.tr_data_loop.exec_()
-            result_df.append(self.tr_data)
+            result_df.append(self.tr_data.copy())
+            i += 1
 
         return self.tr_data
+
+    def _set_input_value(self, kwargs):
+        # set input
+        for key in kwargs:
+            kwarg_key = key.lower()
+            if kwarg_key != "output" and kwarg_key != "screen":
+                self.SetInputValue(key, kwargs[key])
+                self.log.debug(f'SetInputValue({key}, {kwargs[key]})')
+
     def CommRqData(self, rqname, trcode, next, screen):
         """
         TR을 서버로 송신합니다.
