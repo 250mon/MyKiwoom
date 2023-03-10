@@ -3,18 +3,24 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import QObject, QEventLoop
 from pykiwoom import parser
 import pandas as pd
+import datetime
 from kwm_connect import Kwm
 from logging_handler import LoggingHandler
 
 
 class KwmTrApi(QObject, LoggingHandler):
-    def __init__(self):
+    def __init__(self, parent=None):
         super().__init__()
+        self.parent = parent
         # OCX instance
         self.ocx = Kwm().ocx
 
         # Event loop
         self.tr_data_loop = QEventLoop()
+
+        # Tr Data slots for Kiwoom
+        self.ocx.OnReceiveTrData.connect(self.OnReceiveTrData)
+        self.ocx.OnReceiveMsg.connect(self.OnReceiveMsg)
 
         # dictionary of output items for each tr code
         self.tr_output = {}
@@ -22,11 +28,6 @@ class KwmTrApi(QObject, LoggingHandler):
         self.tr_data = None
         # flag for more data to come
         self.tr_remained = False
-
-    def register_slots(self, on_recv_tr_data, on_recv_msg):
-        # Tr Data slots for Kiwoom
-        self.ocx.OnReceiveTrData.connect(on_recv_tr_data)
-        self.ocx.OnReceiveMsg.connect(on_recv_msg)
 
     def get_data(self, trcode, rqname, items):
         rows = self.GetRepeatCnt(trcode, rqname)
