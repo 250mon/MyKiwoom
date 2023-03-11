@@ -139,15 +139,15 @@ if __name__ == "__main__":
     tr_handler = TrDataHandler()
     sleep(3)
 
-    method_api = KwmMethodApi()
-    accounts = method_api.GetLoginInfo("ACCNO")
-    acc_list = []
-    for acc in accounts.split(';'):
-        acc_list.append(acc)
-    print(acc_list)
-    df1, df2 = tr_handler.get_acc_detailed_info(acc_list[0])
-    print(df1)
-    print(df2)
+    # method_api = KwmMethodApi()
+    # accounts = method_api.GetLoginInfo("ACCNO")
+    # acc_list = []
+    # for acc in accounts.split(';'):
+    #     acc_list.append(acc)
+    # print(acc_list)
+    # df1, df2 = tr_handler.get_acc_detailed_info(acc_list[0])
+    # print(df1)
+    # print(df2)
 
     tr_handler.get_ohlcv(['005930'])
 

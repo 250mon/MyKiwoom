@@ -29,7 +29,7 @@ class KwmTrApi(QObject, LoggingHandler):
         self.ocx.OnReceiveTrData.connect(self.OnReceiveTrData)
         self.ocx.OnReceiveMsg.connect(self.OnReceiveMsg)
 
-    def get_data(self, trcode, rqname, items):
+    def _get_data(self, trcode, rqname, items):
         rows = self.GetRepeatCnt(trcode, rqname)
         if rows == 0:
             rows = 1
@@ -97,7 +97,7 @@ class KwmTrApi(QObject, LoggingHandler):
             else:
                 self.tr_remained = False
 
-            df = self.get_data(trcode, rqname, output_items)
+            df = self._get_data(trcode, rqname, output_items)
             self.log.debug(df.head(3))
             self.log.debug(df.shape)
             self.tr_data = df
@@ -151,20 +151,24 @@ class KwmTrApi(QObject, LoggingHandler):
 
         # blocking until onReceiveTrData is called and self.tr_data gets filled
         self.tr_data_loop.exec_()
-        result_df = self.tr_data.copy()
+        df_list = [self.tr_data]
 
         # if there is more data to come, more requests are made
         i = 2
-        while self.tr_remained:
+        while self.tr_remained and i < 5:
             sleep(self.min_interval)
             self._set_input_value(kwargs)
             self.CommRqData(rqname, trcode, 2, screen)
             self.log.debug(f'Calling CommRqData #{i} ...')
             self.tr_data_loop.exec_()
-            result_df.append(self.tr_data.copy())
+            df_list.append(self.tr_data)
             i += 1
+        if len(df_list) > 1:
+            result_df = pd.concat(df_list)
+        else:
+            result_df = df_list[0]
 
-        return self.tr_data
+        return result_df
 
     def _set_input_value(self, kwargs):
         # set input
